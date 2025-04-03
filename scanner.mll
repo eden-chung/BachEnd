@@ -27,8 +27,31 @@ rule token = parse
     | '*' {TIMES}
     | '/' {DIVIDE}
 
+    | "NONE" {NONE}
+    | "TRUE" {TRUE}
+    | "FALSE" {FALSE}
+    | "AND" {AND}
+    | "OR" {OR}
+    | "IF" {IF}
+    | "ELSE" {ELSE}
+    | "ELSE IF" {ELSE_IF}
+    | "WHILE" {WHILE}
+    | "FOR" {FOR}
+    | "IN" {IN}
+    | "RETURN" {RETURN}
+    | "BREAK" {BREAK}
+    | "CONTINUE" {CONTINUE}
     | "REPEAT" {REPEAT}
-    | "WRITE" {WRITE}
+
+    | "CLEF" {CLEF}
+    | "TEMPO" {TEMPO}
+    | "TIMESIGNATURE" {TIMESIGNATURE}
+    | "KEYSIGNATURE" {KEYSIGNATURE}
+    | "TREBLE" {TREBLE}
+    | "BASS" {BASS}
+
+    | "#" {SHARP}
+    | "b" {FLAT}
 
     | NUMBER as lxm {NUMBER(int_of_string lxm)}
     | STRING as lxm {STRING lxm}
