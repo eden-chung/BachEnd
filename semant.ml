@@ -28,13 +28,14 @@ let check (globals, functions) =
   check_binds "global" globals;
 
   (* Collect function declarations for built-in functions: no bodies *)
-  let built_in_decls =
+  (* move the function print down below to allow it to print strings and notes in addition to ints*)
+  (* let built_in_decls =
     StringMap.add "print" {
       rtyp = Int;
       fname = "print";
       formals = [(Int, "x")];
       locals = []; body = [] } StringMap.empty
-  in
+  in *)
 
   (* Add function name to symbol table *)
   let add_func map fd =
@@ -153,6 +154,16 @@ let check (globals, functions) =
         SIf(check_bool_expr e, check_stmt st1, check_stmt st2)
       | While(e, st) ->
         SWhile(check_bool_expr e, check_stmt st)
+      | Repeat(e, st) ->
+        let (t, e') = check_expr e in
+        if t = Int then SRepeat (t, e', check_stmt st)
+        else raise (Failure ("repeat requires an integer expression in " ^ string_of_expr e))
+      | Print e ->
+        let (t, e') = check_expr e in
+        begin match t with
+          | Int | Bool | Note -> SPrint(t, e') (* can modify this later*)
+          | _ -> raise (Failure ("cannot print expression of type " ^ string_of_typ t))
+        end
       | Return e ->
         let (t, e') = check_expr e in
         if t = func.rtyp then SReturn (t, e')

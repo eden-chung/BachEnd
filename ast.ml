@@ -2,6 +2,8 @@
 
 type op = Add | Sub | Times | Divide | Equal | Neq | Less | More | And | Or
 
+type unaryop = Not
+
 type typ = Int | Bool | Note
 
 (* define how note is stored*)

@@ -50,6 +50,7 @@ rule token = parse
     | "WHILE" {WHILE}
     | "FOR" {FOR}
     | "IN" {IN}
+    | "NOT" {NOT}
     | "RETURN" {RETURN}
     | "BREAK" {BREAK}
     | "CONTINUE" {CONTINUE}
