@@ -3,10 +3,15 @@ let digit = ['0'-'9']
 let alphanumeric = ['a'-'z' 'A'-'Z' '0'-'9']
 let whitespace = [' ' '\t' '\r']
 
-let id = ['a'-'z'] (alpha | digit)*
-let NUMBER = '0' | (('1'-'9') digit)*
-let STRING = '"' (alphanumeric)* '"'
-let NOTE = ['A'-'G']
+let alpha_lower = ['a'-'z']
+let id = alpha_lower alphanumeric+ (* must be at least 2 characters long*)
+
+let NUMBER = '-'? ('0' | (['1'-'9'] digit*))
+let string_body = ['a'-'z' 'A'-'Z' '0'-'9']*
+let STRING = '"' string_body '"'
+
+let NOTE_BASE = ['A'-'G']
+let NOTE = NOTE_BASE ('#' | 'b')? | 'R' (* R for rest note *)
 
 rule token = parse
     whitespace { token lexbuf }
@@ -26,15 +31,22 @@ rule token = parse
     | '-' {MINUS}
     | '*' {TIMES}
     | '/' {DIVIDE}
+    
+    | "==" { EQUAL }
+    | "!=" { NEQ }
+    | "<=" { LEQ }
+    | ">=" { GEQ }
+    | "<" { LT }
+    | ">" { GT }
 
     | "NONE" {NONE}
     | "TRUE" {TRUE}
     | "FALSE" {FALSE}
     | "AND" {AND}
     | "OR" {OR}
+    | "ELSE IF" {ELSE_IF}
     | "IF" {IF}
     | "ELSE" {ELSE}
-    | "ELSE IF" {ELSE_IF}
     | "WHILE" {WHILE}
     | "FOR" {FOR}
     | "IN" {IN}
@@ -49,9 +61,6 @@ rule token = parse
     | "KEYSIGNATURE" {KEYSIGNATURE}
     | "TREBLE" {TREBLE}
     | "BASS" {BASS}
-
-    | "#" {SHARP}
-    | "b" {FLAT}
 
     | NUMBER as lxm {NUMBER(int_of_string lxm)}
     | STRING as lxm {STRING lxm}
