@@ -4,25 +4,40 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET PLUS MINUS ASSIGN
 %token EQ NEQ LT AND OR
 %token IF ELSE WHILE FOR
-%token INT BOOL
-%token RETURN COMMA
-%token <int> LITERAL
-%token <bool> BLIT
+%token COMMA DOT
 %token <string> ID
-%token EOF
 
 %start program_rule
 %type <Ast.program> program_rule
 
+%token EQUAL NEQ LEQ GEQ LT GT
+%token AND OR
+
+%token IF ELSE ELSE_IF WHILE FOR IN NOT
+%token RETURN BREAK CONTINUE REPEAT
+
+%token CLEF TEMPO TIMESIGNATURE KEYSIGNATURE TREBLE BASS
+
+%token <int> NUMBER
+%token <string> STRING
+%token <string> NOTE
+
+%token TRUE FALSE
+%token EXCLAMATION
+
 %right ASSIGN
 %left OR
 %left AND
-%left EQ NEQ
+%left EQUAL NEQ
 %left LT
 %left PLUS MINUS
+%left TIMES DIVIDE
+%left NOT
+
+%token EOF
 
 %%
 
@@ -53,16 +68,24 @@ stmt_rule:
                                                         { For ($3, $5, $7, $9) }
 
 expr_rule:
-    BLIT                         { BoolLit $1 }
-  | LITERAL                      { Literal $1 }
+    NUMBER                       { Literal $1 }
+  | STRING                       { StringLit $1 }
+  | NOTE                         { NoteLit $1 }
+  | TRUE                         { BoolLit true }
+  | FALSE                        { BoolLit false }
   | ID                           { Id $1 }
   | expr_rule PLUS expr_rule     { Binop ($1, Add, $3) }
   | expr_rule MINUS expr_rule    { Binop ($1, Sub, $3) }
   | expr_rule EQ expr_rule       { Binop ($1, Equal, $3) }
   | expr_rule NEQ expr_rule      { Binop ($1, Neq, $3) }
   | expr_rule LT expr_rule       { Binop ($1, Less, $3) }
+  | expr_rule LEQ expr_rule      { Binop ($1, Leq, $3) }
+  | expr_rule GT expr_rule       { Binop ($1, Greater, $3) }
+  | expr_rule GEQ expr_rule      { Binop ($1, Geq, $3) }
   | expr_rule AND expr_rule      { Binop ($1, And, $3) }
   | expr_rule OR expr_rule       { Binop ($1, Or, $3) }
+  | EXCLAMATION expr_rule        { Unop(not, $2) }
+  | NOT expr_rule                { Unop(not, $2) }
   | ID ASSIGN expr_rule          { Assign ($1, $3) }
   | LPAREN expr_rule RPAREN      { $2 }
   | ID LPAREN args_rule_opt RPAREN { Call ($1, $3) }
