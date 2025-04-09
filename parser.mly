@@ -88,9 +88,9 @@ expr_rule:
   | NOT expr_rule                { Unop(not, $2) }
   | ID ASSIGN expr_rule          { Assign ($1, $3) }
   | LPAREN expr_rule RPAREN      { $2 }
-  | ID LPAREN args_rule_opt RPAREN { Call ($1, $3) }
+  | ID LPAREN args_list_opt RPAREN { Call ($1, $3) }
   
-arg_list_opt:
+args_list_opt:
     /* nothing */                { [] }
   | arg_list                    { $1 }
 
