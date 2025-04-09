@@ -65,4 +65,12 @@ expr_rule:
   | expr_rule OR expr_rule       { Binop ($1, Or, $3) }
   | ID ASSIGN expr_rule          { Assign ($1, $3) }
   | LPAREN expr_rule RPAREN      { $2 }
+  | ID LPAREN args_rule_opt RPAREN { Call ($1, $3) }
+  
+arg_list_opt:
+    /* nothing */                { [] }
+  | arg_list                    { $1 }
 
+arg_list:
+    expr_rule                   { [$1] }
+  | expr_rule COMMA arg_list   { $1 :: $3 }
