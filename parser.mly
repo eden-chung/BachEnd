@@ -5,25 +5,27 @@ open Ast
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET PLUS MINUS ASSIGN
-%token EQ NEQ LT AND OR
-%token IF ELSE WHILE FOR
+/* %token EQ NEQ AND OR 
+%token IF ELSE WHILE FOR */
 %token COMMA DOT
 %token <string> ID
 
 %start program_rule
 %type <Ast.program> program_rule
 
-%token EQUAL NEQ LEQ GEQ LT GT
+%token EQ EQUAL NEQ LEQ GEQ LT GT
 %token AND OR
 
 %token IF ELSE ELSE_IF WHILE FOR IN NOT
 %token RETURN BREAK CONTINUE REPEAT
 
 %token CLEF TEMPO TIMESIGNATURE KEYSIGNATURE TREBLE BASS
+%token INT BOOL
 
 %token <int> NUMBER
 %token <string> STRING
 %token <string> NOTE
+
 
 %token TRUE FALSE
 %token EXCLAMATION
