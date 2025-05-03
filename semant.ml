@@ -5,7 +5,7 @@ open Sast
 
 module StringMap = Map.Make(String)
 
-(* input is AST for program, output is SAST. List of global variables stays the sa,e*)
+(* input is AST for program, output is SAST. List of global variables stays the same*)
 
 (* Semantic checking of the AST. Returns an SAST if successful,
    throws an exception if something is wrong.
