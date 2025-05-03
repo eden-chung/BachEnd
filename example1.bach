@@ -1,0 +1,9 @@
+song1 = WRITE(NAME=“My Favorite Song”, CLEF=TREBLE) {
+    //twinkle twinkle duet
+    [4(C C G G A A) 2G
+    4(F F E E D D) 2D]!
+
+    REPEAT(5) {
+        [4(C C C C)]!
+    }
+}
