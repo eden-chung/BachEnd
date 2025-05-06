@@ -55,6 +55,9 @@ let string_of_op = function
   | Equal -> "=="
   | Neq -> "!="
   | Less -> "<"
+  | More -> ">"
+  | Times -> "*"
+  | Divide -> "/"
   | And -> "&&"
   | Or -> "||"
 
