@@ -17,6 +17,7 @@ type expr =
     Literal of int
   | BoolLit of bool
   | NoteLit of note
+  | StringLit of string
   | Id of string
   | Binop of expr * op * expr
   | Assign of string * expr

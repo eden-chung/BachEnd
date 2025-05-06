@@ -1,3 +1,5 @@
+{ open Parser }
+
 let alpha = ['a'-'z' 'A'-'Z']
 let digit = ['0'-'9']
 let alphanumeric = ['a'-'z' 'A'-'Z' '0'-'9']
@@ -39,7 +41,6 @@ rule token = parse
     | "<" { LT }
     | ">" { GT }
 
-    | "NONE" {NONE}
     | "TRUE" {TRUE}
     | "FALSE" {FALSE}
     | "AND" {AND}

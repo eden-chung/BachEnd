@@ -30,6 +30,15 @@ open Ast
 %token TRUE FALSE
 %token EXCLAMATION
 
+%token OR
+%token AND
+%token EQUAL NEQ
+%token LT
+%token PLUS MINUS
+%token TIMES DIVIDE
+%token NOT
+
+
 %right ASSIGN
 %left OR
 %left AND
@@ -38,6 +47,7 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left NOT
+
 
 %token EOF
 
