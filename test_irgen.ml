@@ -43,5 +43,23 @@ let test3 () =
   print_endline "Test 3: Function with a note literal";
   run_test "Note literal" ([], [dummy_func])
 
+  let test4 () =
+    let notes = [
+      { pitch = "c";  octave = 4; length = 4 };
+      { pitch = "d#"; octave = 5; length = 2 };
+      { pitch = "bb"; octave = 3; length = 1 };
+      { pitch = "r";  octave = 0; length = 4 };
+    ] in
+    let exprs = List.map (fun n -> SExpr (Note, SNoteLit n)) notes in
+    let dummy_func = {
+      srtyp    = Int;
+      sfname   = "melody";
+      sformals = [];
+      slocals  = [];
+      sbody    = exprs @ [ SReturn (Int, SLiteral 0) ];
+    } in
+    print_endline "Test 4: Function with multiple notes and varying octaves";
+    run_test "Melody" ([], [dummy_func])
+
 let _ =
-  test1 (); test2 (); test3()
+  test1 (); test2 (); test3(); test4()
