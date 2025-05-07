@@ -13,7 +13,7 @@ open Ast
 %start program_rule
 %type <Ast.program> program_rule
 
-%token EQ EQUAL NEQ LEQ GEQ LT GT
+%token EQ EQUAL NEQ /*LEQ GEQ LT GT*/ MORE LESS
 %token AND OR
 
 %token IF ELSE ELSE_IF WHILE FOR IN NOT
@@ -88,10 +88,10 @@ expr_rule:
   | expr_rule MINUS expr_rule    { Binop ($1, Sub, $3) }
   | expr_rule EQ expr_rule       { Binop ($1, Equal, $3) }
   | expr_rule NEQ expr_rule      { Binop ($1, Neq, $3) }
-  | expr_rule LT expr_rule       { Binop ($1, Less, $3) }
-  | expr_rule LEQ expr_rule      { Binop ($1, Leq, $3) }
-  | expr_rule GT expr_rule       { Binop ($1, Greater, $3) }
-  | expr_rule GEQ expr_rule      { Binop ($1, Geq, $3) }
+  | expr_rule LESS expr_rule       { Binop ($1, Less, $3) }
+/*  | expr_rule LEQ expr_rule      { Binop ($1, Leq, $3) } */
+  | expr_rule MORE expr_rule       { Binop ($1, More, $3) }
+/*  | expr_rule GEQ expr_rule      { Binop ($1, Geq, $3) }*/
   | expr_rule AND expr_rule      { Binop ($1, And, $3) }
   | expr_rule OR expr_rule       { Binop ($1, Or, $3) }
   | EXCLAMATION expr_rule        { Unop(Not, $2) }
@@ -107,3 +107,4 @@ args_list_opt:
 arg_list:
     expr_rule                   { [$1] }
   | expr_rule COMMA arg_list   { $1 :: $3 }
+
