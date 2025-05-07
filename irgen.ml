@@ -37,6 +37,7 @@ let translate (globals, functions) = (* global variables and a list of functions
   let ltype_of_typ = function
       A.Int   -> i32_t
     | A.Bool  -> i1_t
+    | A.Note -> L.pointer_type i8_t (* maybe modify this later depending on how we represent note*)
   in
 
   (* Create a map of global variables after creating each *)
@@ -53,7 +54,7 @@ let translate (globals, functions) = (* global variables and a list of functions
 
   (* Define each function (arguments and return type) so we can
      call it even before we've created its body *)
-  let function_decls : (L.llvalue * sfunc_def) StringMap.t =
+  let function_decls : (L.llvalue * sfunc_decl) StringMap.t =
     let function_decl m fdecl =
       let name = fdecl.sfname
       and formal_types =
@@ -61,6 +62,72 @@ let translate (globals, functions) = (* global variables and a list of functions
       in let ftype = L.function_type (ltype_of_typ fdecl.srtyp) formal_types in
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
+
+
+    (* mapping between Bachend strings and lilypond*)
+    let pitch_to_lilypond pitch =
+      match String.lowercase_ascii pitch with
+      | "c"  -> "c"
+      | "c#" -> "cis"
+      | "db" -> "des"
+      | "d"  -> "d"
+      | "d#" -> "dis"
+      | "eb" -> "ees"
+      | "e"  -> "e"
+      | "f"  -> "f"
+      | "f#" -> "fis"
+      | "gb" -> "ges"
+      | "g"  -> "g"
+      | "g#" -> "gis"
+      | "ab" -> "aes"
+      | "a"  -> "a"
+      | "a#" -> "ais"
+      | "bb" -> "bes"
+      | "b"  -> "b"
+      | "r"  -> "r"
+      | _ -> failwith ("Unknown pitch: " ^ pitch)
+    in
+
+    (* convert the input into lilypond *)
+    (* let lilypond_of_body stmts =
+      let note_strs =
+        stmts
+        |> List.filter_map (function
+            | SExpr (_, SNote (pitch, octave, duration)) ->
+                let p = pitch_to_lilypond pitch in
+                let oct_suffix =
+                  if pitch = "r" then ""
+                  else if octave = 4 then "'"
+                  else if octave > 4 then String.make (octave - 4) '\''
+                  else String.make (4 - octave) ','
+                in
+                Some (Printf.sprintf "%s%d%s" p duration oct_suffix)
+            | SExpr (_, SRest duration) ->
+                Some (Printf.sprintf "%dr" duration)
+            | _ -> None)
+      in
+      String.concat " " note_strs
+    in *)
+    let lilypond_of_body stmts =
+      stmts
+      |> List.filter_map (function
+           | SExpr (_, SNoteLit note) ->
+               (* unpack the record *)
+               let p = pitch_to_lilypond note.pitch in
+               let dur = note.length in
+               (* for rests (pitch = "r") we omit the octave suffix *)
+               let oct_suffix =
+                 if note.pitch = "r" then ""
+                 else if note.octave = 4 then "'"
+                 else if note.octave > 4 then String.make (note.octave - 4) '\''
+                 else String.make (4 - note.octave) ','
+               in
+               Some (Printf.sprintf "%s%s%d" p oct_suffix dur)
+    
+           | _ -> None)
+      |> String.concat " "
+    in
+    
 
   (* Fill in the body of the given function *)
   let build_function_body fdecl =
@@ -97,29 +164,6 @@ let translate (globals, functions) = (* global variables and a list of functions
     let lookup n = try StringMap.find n local_vars
       with Not_found -> StringMap.find n global_vars
     in
-
-    (* mapping between Bachend strings and lilypond*)
-    let pitch_to_lilypond pitch =
-      match String.lowercase_ascii pitch with
-      | "c"  -> "c"
-      | "c#" -> "cis"
-      | "db" -> "des"
-      | "d"  -> "d"
-      | "d#" -> "dis"
-      | "eb" -> "ees"
-      | "e"  -> "e"
-      | "f"  -> "f"
-      | "f#" -> "fis"
-      | "gb" -> "ges"
-      | "g"  -> "g"
-      | "g#" -> "gis"
-      | "ab" -> "aes"
-      | "a"  -> "a"
-      | "a#" -> "ais"
-      | "bb" -> "bes"
-      | "b"  -> "b"
-      | "r"  -> "r"
-      | _ -> failwith ("Unknown pitch: " ^ pitch)
     
 
     (* Construct code for an expression; return its value *)
@@ -129,7 +173,7 @@ let translate (globals, functions) = (* global variables and a list of functions
       | SId s       -> L.build_load (lookup s) s builder
       | SAssign (s, e) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup s) builder); e'
-      | SNote (pitch, octave, duration) ->
+      (* | SNote (pitch, octave, duration) ->
         let pitch_str = pitch_to_lilypond pitch in
         let octave_str =
           if pitch = "r" then ""  (* rests don't get ticks *)
@@ -139,7 +183,20 @@ let translate (globals, functions) = (* global variables and a list of functions
         let lilypond_str = Printf.sprintf "%d%s%s" duration pitch_str octave_str in
         L.build_global_stringptr lilypond_str "note_str" builder  (* optional: for now *)
        (* we can change this later but for now default octave is octave 4*)
-      | SRest duration -> Printf.sprintf "%dr" duration
+      | SRest duration -> Printf.sprintf "%dr" duration *)
+      | SNoteLit note ->
+        (* unpack your Ast.note record *)
+        let p = pitch_to_lilypond note.pitch in
+        let dur = note.length in
+        let oct_suffix =
+          if note.pitch = "r" then ""
+          else if note.octave = 4 then "'"
+          else if note.octave > 4 then String.make (note.octave - 4) '\''
+          else String.make (4 - note.octave) ','
+        in
+        (* for now we just emit the string pointer so build_expr typechecks;
+           you can delete this entire branch later once you remove LLVM work *)
+        L.build_global_stringptr (Printf.sprintf "%s%s%d" p oct_suffix dur) "note_str" builder
       | SBinop (e1, op, e2) ->
         let e1' = build_expr builder e1
         and e2' = build_expr builder e2 in
@@ -214,12 +271,27 @@ let translate (globals, functions) = (* global variables and a list of functions
     let func_builder = build_stmt builder (SBlock fdecl.sbody) in
 
     (* Add a return if the last block falls off the end *)
-    add_terminal func_builder (L.build_ret (L.const_int i32_t 0))
+    (* add_terminal func_builder (L.build_ret (L.const_int i32_t 0)) *)
+    let _ = add_terminal func_builder (L.build_ret (L.const_int i32_t 0)) in
 
-    let output = (* insert function here*)
 
-    (* Wrap it in LilyPond braces *)
-  "{\n" ^ output ^ "\n}\n"
+    (* this is all to output the lilypond output*)
+    let raw_body = lilypond_of_body fdecl.sbody in
+
+    (* hardcode the header with the staff and time signature for now*)
+    let header =
+      "\\version \"2.24.2\"\n\
+       \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = 100\n"
+    in
+
+    let footer =
+      "\n  } }\n"
+    in
+
+    (* append sections *)
+    let full_score = header ^ raw_body ^ footer in
+
+    Printf.printf "%s\n" full_score
 
   in
 
