@@ -30,13 +30,11 @@ open Ast
 %token TRUE FALSE
 %token EXCLAMATION
 
-%token OR
-%token AND
-%token EQUAL NEQ
+/*%token EQUAL NEQ
 %token LT
-%token PLUS MINUS
+%token PLUS MINUS*/
 %token TIMES DIVIDE
-%token NOT
+/*%token NOT*/
 
 
 %right ASSIGN
@@ -96,8 +94,8 @@ expr_rule:
   | expr_rule GEQ expr_rule      { Binop ($1, Geq, $3) }
   | expr_rule AND expr_rule      { Binop ($1, And, $3) }
   | expr_rule OR expr_rule       { Binop ($1, Or, $3) }
-  | EXCLAMATION expr_rule        { Unop(not, $2) }
-  | NOT expr_rule                { Unop(not, $2) }
+  | EXCLAMATION expr_rule        { Unop(Not, $2) }
+  | NOT expr_rule                { Unop(Not, $2) }
   | ID ASSIGN expr_rule          { Assign ($1, $3) }
   | LPAREN expr_rule RPAREN      { $2 }
   | ID LPAREN args_list_opt RPAREN { Call ($1, $3) }
