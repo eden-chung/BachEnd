@@ -62,6 +62,27 @@ let translate (globals, functions) = (* global variables and a list of functions
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
 
+    (* convert the input into lilypond *)
+    let lilypond_of_body stmts =
+      let note_strs =
+        stmts
+        |> List.filter_map (function
+            | SExpr (_, SNote (pitch, octave, duration)) ->
+                let p = pitch_to_lilypond pitch in
+                let oct_suffix =
+                  if pitch = "r" then ""
+                  else if octave = 4 then "'"
+                  else if octave > 4 then String.make (octave - 4) '\''
+                  else String.make (4 - octave) ','
+                in
+                Some (Printf.sprintf "%s%d%s" p duration oct_suffix)
+            | SExpr (_, SRest duration) ->
+                Some (Printf.sprintf "%dr" duration)
+            | _ -> None)
+      in
+      String.concat " " note_strs
+
+
   (* Fill in the body of the given function *)
   let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.sfname function_decls in
@@ -216,10 +237,24 @@ let translate (globals, functions) = (* global variables and a list of functions
     (* Add a return if the last block falls off the end *)
     add_terminal func_builder (L.build_ret (L.const_int i32_t 0))
 
-    let output = (* insert function here*)
 
-    (* Wrap it in LilyPond braces *)
-  "{\n" ^ output ^ "\n}\n"
+    (* this is all to output the lilypond output*)
+    let raw_body = lilypond_of_body fdecl.sbody in
+
+    (* hardcode the header with the staff and time signature for now*)
+    let header =
+      "\\version \"2.24.2\"\n\
+       \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = 100\n"
+    in
+
+    let footer =
+      "\n  } }\n"
+    in
+
+    (* append sections *)
+    let full_score = header ^ raw_body ^ footer in
+
+    Printf.printf "%s\n" full_score;
 
   in
 
