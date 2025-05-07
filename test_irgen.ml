@@ -31,5 +31,17 @@ let test2 () =
   print_endline "Test 2: Single function return 0";
   run_test "Return 0" ([], [dummy_func])
 
+let test3 () =
+  let note_value = { pitch = "c"; octave = 4; length = 4 } in
+  let dummy_func = {
+    srtyp    = Int;
+    sfname   = "notes";
+    sformals = [];
+    slocals  = [];
+    sbody    = [ SExpr (Note, SNoteLit note_value); SReturn (Int, SLiteral 0) ];
+  } in
+  print_endline "Test 3: Function with a note literal";
+  run_test "Note literal" ([], [dummy_func])
+
 let _ =
-  test1 (); test2 ()
+  test1 (); test2 (); test3()

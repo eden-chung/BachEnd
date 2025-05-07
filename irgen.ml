@@ -113,8 +113,8 @@ let translate (globals, functions) = (* global variables and a list of functions
       |> List.filter_map (function
            | SExpr (_, SNoteLit note) ->
                (* unpack the record *)
-               let p    = pitch_to_lilypond note.pitch in
-               let dur  = note.length in
+               let p = pitch_to_lilypond note.pitch in
+               let dur = note.length in
                (* for rests (pitch = "r") we omit the octave suffix *)
                let oct_suffix =
                  if note.pitch = "r" then ""
@@ -122,7 +122,7 @@ let translate (globals, functions) = (* global variables and a list of functions
                  else if note.octave > 4 then String.make (note.octave - 4) '\''
                  else String.make (4 - note.octave) ','
                in
-               Some (Printf.sprintf "%s%d%s" p dur oct_suffix)
+               Some (Printf.sprintf "%s%s%d" p oct_suffix dur)
     
            | _ -> None)
       |> String.concat " "
@@ -184,6 +184,19 @@ let translate (globals, functions) = (* global variables and a list of functions
         L.build_global_stringptr lilypond_str "note_str" builder  (* optional: for now *)
        (* we can change this later but for now default octave is octave 4*)
       | SRest duration -> Printf.sprintf "%dr" duration *)
+      | SNoteLit note ->
+        (* unpack your Ast.note record *)
+        let p = pitch_to_lilypond note.pitch in
+        let dur = note.length in
+        let oct_suffix =
+          if note.pitch = "r" then ""
+          else if note.octave = 4 then "'"
+          else if note.octave > 4 then String.make (note.octave - 4) '\''
+          else String.make (4 - note.octave) ','
+        in
+        (* for now we just emit the string pointer so build_expr typechecks;
+           you can delete this entire branch later once you remove LLVM work *)
+        L.build_global_stringptr (Printf.sprintf "%s%s%d" p oct_suffix dur) "note_str" builder
       | SBinop (e1, op, e2) ->
         let e1' = build_expr builder e1
         and e2' = build_expr builder e2 in
