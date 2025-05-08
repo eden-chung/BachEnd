@@ -10,7 +10,7 @@ let run_test name program =
     let m = translate program in
     let ir = Llvm.string_of_llmodule m in
     print_endline (name ^ ": IR was successful");
-    print_endline ir
+    (* print_endline ir *)
   with e ->
     print_endline (name ^ ": IR generation failed: " ^ Printexc.to_string e)
 

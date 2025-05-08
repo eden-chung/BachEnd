@@ -25,4 +25,5 @@ let () =
     match !action with
       Ast     -> ()
     | Sast    -> print_string (Sast.string_of_sprogram sast)
-    | LLVM_IR -> print_string (Llvm.string_of_llmodule (Irgen.translate sast))
+    (* | LLVM_IR -> print_string (Llvm.string_of_llmodule (Irgen.translate sast)) *)
+    | LLVM_IR -> ignore (translate sast) (* since we don't want to print LLVM code, just the bachend notes*)
