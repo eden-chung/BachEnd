@@ -2,7 +2,7 @@
 
 type op = Add | Sub | Times | Divide | Equal | Neq | Less | More | And | Or
 
-type unaryop = Not
+type unaryop = Not | Neg
 
 type typ = Int | Bool | Note
 
@@ -20,6 +20,7 @@ type expr =
   | StringLit of string
   | Id of string
   | Binop of expr * op * expr
+  | Unop of unaryop * expr
   | Assign of string * expr
   (* function call *)
   | Call of string * expr list (* Function call is a new type of express in microC. List of expressions passed into the function*)

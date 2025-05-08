@@ -13,7 +13,7 @@ open Ast
 %start program_rule
 %type <Ast.program> program_rule
 
-%token EQ EQUAL NEQ LEQ GEQ LT GT
+%token EQ EQUAL NEQ /*LEQ GEQ LT GT*/ MORE LESS
 %token AND OR
 
 %token IF ELSE ELSE_IF WHILE FOR IN NOT
@@ -30,13 +30,11 @@ open Ast
 %token TRUE FALSE
 %token EXCLAMATION
 
-%token OR
-%token AND
-%token EQUAL NEQ
+/*%token EQUAL NEQ
 %token LT
-%token PLUS MINUS
+%token PLUS MINUS*/
 %token TIMES DIVIDE
-%token NOT
+/*%token NOT*/
 
 
 %right ASSIGN
@@ -90,14 +88,14 @@ expr_rule:
   | expr_rule MINUS expr_rule    { Binop ($1, Sub, $3) }
   | expr_rule EQ expr_rule       { Binop ($1, Equal, $3) }
   | expr_rule NEQ expr_rule      { Binop ($1, Neq, $3) }
-  | expr_rule LT expr_rule       { Binop ($1, Less, $3) }
-  | expr_rule LEQ expr_rule      { Binop ($1, Leq, $3) }
-  | expr_rule GT expr_rule       { Binop ($1, Greater, $3) }
-  | expr_rule GEQ expr_rule      { Binop ($1, Geq, $3) }
+  | expr_rule LESS expr_rule       { Binop ($1, Less, $3) }
+/*  | expr_rule LEQ expr_rule      { Binop ($1, Leq, $3) } */
+  | expr_rule MORE expr_rule       { Binop ($1, More, $3) }
+/*  | expr_rule GEQ expr_rule      { Binop ($1, Geq, $3) }*/
   | expr_rule AND expr_rule      { Binop ($1, And, $3) }
   | expr_rule OR expr_rule       { Binop ($1, Or, $3) }
-  | EXCLAMATION expr_rule        { Unop(not, $2) }
-  | NOT expr_rule                { Unop(not, $2) }
+  | EXCLAMATION expr_rule        { Unop(Not, $2) }
+  | NOT expr_rule                { Unop(Not, $2) }
   | ID ASSIGN expr_rule          { Assign ($1, $3) }
   | LPAREN expr_rule RPAREN      { $2 }
   | ID LPAREN args_list_opt RPAREN { Call ($1, $3) }
@@ -109,3 +107,4 @@ args_list_opt:
 arg_list:
     expr_rule                   { [$1] }
   | expr_rule COMMA arg_list   { $1 :: $3 }
+
