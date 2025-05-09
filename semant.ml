@@ -1,6 +1,6 @@
 (* MODIFIED FROM IN CLASS CODE. *)
 
-open Ast
+open Old_ast
 open Sast
 
 module StringMap = Map.Make(String)
@@ -158,9 +158,6 @@ let check (globals, functions) =
         if t = Int then SRepeat ((t, e'), check_stmt st)
         else raise (Failure ("repeat requires an integer expression in " ^ string_of_expr e))
       | Write(stmt_block) -> SWrite (check_stmt stmt_block)
-        let (t, e') = check_expr e in
-        if t = Int then SRepeat ((t, e'), check_stmt st)
-        else raise (Failure ("repeat requires an integer expression in " ^ string_of_expr e))
       | Print e ->
         let (t, e') = check_expr e in
         begin match t with

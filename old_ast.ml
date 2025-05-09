@@ -33,6 +33,7 @@ type stmt =
   | For of expr * expr * expr * stmt (* for loop*)
   | Print of expr
   | Repeat of expr * stmt (* repeat n times loop*)
+  | Write of stmt
   (* return *)
   | Return of expr (* we need a return statement, it returns an expression*)
 
@@ -82,6 +83,7 @@ let rec string_of_stmt = function
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
                       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+  | Write(stmt) -> "write " ^ string_of_stmt stmt ^ ";\n" (* Add pretty-printing for Write *)
 
 let string_of_typ = function
     Int -> "int"

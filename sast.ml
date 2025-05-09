@@ -1,4 +1,4 @@
-open Ast  (* Reuse op, typ, and note definitions *)
+open Old_ast  (* Reuse op, typ, and note definitions *)
 
 (* A typed expression: includes the expression's type (typ) and the expression itself (sx) *)
 type sexpr = typ * sx
@@ -21,7 +21,9 @@ type sstmt =
   | SWhile of sexpr * sstmt
   | SFor of sexpr * sexpr * sexpr * sstmt
   | SPrint of sexpr
-  | SRepeat of sexpr * sstmt
+  | SRepeat of sexpr * sstmt 
+  | SWrite of sstmt
+  (* return statement *)
   | SReturn of sexpr
 
 (* Typed function declaration *)
