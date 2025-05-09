@@ -47,7 +47,9 @@ vdecl_list:
 /* int x */
 vdecl:
   typ ID                                    { ($1, $2) }
+  /*
   | typ ID ASSIGN STRING_LITERAL            { Vinitialize($1, $2, $4) }
+  */
 
 
 typ:
