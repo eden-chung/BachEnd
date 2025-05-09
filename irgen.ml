@@ -99,14 +99,14 @@ let translate (globals, functions) = (* global variables and a list of functions
             let token =
               if note.pitch = "r" then
                 (* rest *)
-                Printf.sprintf "%dr" note.length
+                Printf.sprintf "r%d" note.length
               else
                 (* pitch *)
                 let p = pitch_to_lilypond note.pitch in
                 let oct =
-                  if note.octave = 4 then "'" 
-                  else if note.octave > 4 then String.make (note.octave - 4) '\''
-                  else String.make (4 - note.octave) ','
+                  if note.octave = 3 then "" 
+                  else if note.octave > 3 then String.make (note.octave - 3) '\'' (*add a tick for each oct above 3*)
+                  else String.make (3 - note.octave) ','
                 in
                 Printf.sprintf "%s%s%d" p oct note.length
             in
@@ -131,7 +131,6 @@ let translate (globals, functions) = (* global variables and a list of functions
             aux acc rest
       in
       aux [] stmts
-      |> List.rev
       |> String.concat " "    
     in
     
@@ -235,9 +234,9 @@ let translate (globals, functions) = (* global variables and a list of functions
         let dur = note.length in
         let oct_suffix =
           if note.pitch = "r" then ""
-          else if note.octave = 4 then "'"
-          else if note.octave > 4 then String.make (note.octave - 4) '\''
-          else String.make (4 - note.octave) ','
+          else if note.octave = 3 then "'"
+          else if note.octave > 3 then String.make (note.octave - 3) '\''
+          else String.make (3 - note.octave) ','
         in
         (* for now we just emit the string pointer so build_expr typechecks;
            you can delete this entire branch later once you remove LLVM work *)

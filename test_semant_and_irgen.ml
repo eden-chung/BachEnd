@@ -144,7 +144,7 @@ let test9 () =
   let note_value = { pitch = "c"; octave = 4; length = 4 } in
   let dummy_func = {
     rtyp = Int;
-    fname = "notes";
+    fname = "main";
     formals = [];
     locals = [];
     body = [
@@ -165,14 +165,95 @@ let test10 () =
   let exprs = List.map (fun n -> Expr(NoteLit n)) notes in
   let dummy_func = {
     rtyp = Int;
-    fname = "melody";
+    fname = "main";
     formals = [];
     locals = [];
     body = exprs @ [ Return (Literal 0) ]
   } in
   run_test "Melody" ([], [dummy_func])
 
+(* Test 11: Valid program with same note and varying octaves *)
+let test11 () =
+  let notes = [
+    { pitch = "d";  octave = 3; length = 4 };
+    { pitch = "d";  octave = 4; length = 4 };
+    { pitch = "d";  octave = 5; length = 4 };
+    { pitch = "d";  octave = 6; length = 4 };
+    { pitch = "d";  octave = 7; length = 4 };
+  ] in
+  let exprs = List.map (fun n -> Expr(NoteLit n)) notes in
+  let dummy_func = {
+    rtyp = Int;
+    fname = "main";
+    formals = [];
+    locals = [];
+    body = exprs @ [ Return (Literal 0) ]
+  } in
+  run_test "C4 then C5" ([], [dummy_func])
+
+  (* Test 12: Valid program with multiple notes and varying octaves *)
+let test12 () =
+  let notes = [
+    { pitch = "c";  octave = 4; length = 4 };
+    { pitch = "d";  octave = 5; length = 4 };
+  ] in
+  let exprs = List.map (fun n -> Expr(NoteLit n)) notes in
+  let dummy_func = {
+    rtyp = Int;
+    fname = "main";
+    formals = [];
+    locals = [];
+    body = exprs @ [ Return (Literal 0) ]
+  } in
+  run_test "C4 then D5" ([], [dummy_func])
+
+    (* Test 12: Valid program with multiple notes and varying octaves *)
+let test13 () =
+  let notes = [
+    { pitch = "c";  octave = 4; length = 4 };
+    { pitch = "d";  octave = 5; length = 4 };
+  ] in
+  let exprs = List.map (fun n -> Expr(NoteLit n)) notes in
+  let dummy_func = {
+    rtyp = Int;
+    fname = "main";
+    formals = [];
+    locals = [];
+    body = exprs @ [ Return (Literal 0) ]
+  } in
+  run_test "C4 then D5" ([], [dummy_func])
+  
+  let test13_prime () =
+    let note_value = { pitch = "c"; octave = 4; length = 4 } in
+    let block_notes = [ note_value] in
+    let exprs = List.map (fun n -> Expr(NoteLit n)) block_notes in
+    let dummy_func = {
+      rtyp = Int;
+      fname = "main";
+      formals = [];
+      locals = [];
+      body = exprs @ [ Return (Literal 0) ]
+    } in
+    run_test "13': REPEAT notes" ([], [dummy_func])
+  
+  let test13 () =
+    let note_value = { pitch = "c"; octave = 4; length = 4 } in
+    let block_notes = [ note_value ] in
+    let exprs = List.map (fun n -> Expr(NoteLit n)) block_notes in
+    let dummy_func = {
+      rtyp = Int;
+      fname = "main";
+      formals = [];
+      locals = [];
+      body = [ Repeat(Literal 5, Block exprs); Return (Literal 0) ];
+    } in
+    run_test "13: REPEAT notes" ([], [dummy_func])
+  
+
+
 (* Execute all tests *)
 let () =
-  test1 (); test2 (); test3 (); test4 ();
-  test5 (); test6 (); test7 (); test8 (); test9 (); test10 ();
+  test1 (); 
+  test3 ();
+  test5 (); 
+  test7 (); test8 (); test9 (); test10 (); test11(); test12(); test13_prime(); test13();
