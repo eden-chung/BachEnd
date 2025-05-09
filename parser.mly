@@ -45,7 +45,6 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left NOT
-%right NOT
 %nonassoc LOWER_THAN_ELSE
 
 
