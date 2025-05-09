@@ -4,7 +4,7 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN EXCLAMATION LBRACKET RBRACKET DOT
+%token SEMI LPAREN RPAREN LBRACE RBRACE ASSIGN EXCLAMATION LBRACKET RBRACKET DOT
 %token EQUAL NEQ LT AND OR GT LEQ GEQ NOT
 %token IF ELSE WHILE INT BOOL ELSE_IF FOR IN
 %token PLUS TIMES MINUS DIVIDE
@@ -46,11 +46,15 @@ vdecl_list:
 
 /* int x */
 vdecl:
-  typ ID { ($1, $2) }
+  typ ID                                    { ($1, $2) }
+  | typ ID ASSIGN STRING_LITERAL            { Vinitialize($1, $2, $4) }
+
 
 typ:
     INT   { Int   }
   | BOOL  { Bool  }
+  | NOTE  { Note  }
+  | String  { String  }
 
 /* fdecl */
 fdecl:
@@ -91,6 +95,8 @@ stmt:
 expr:
     LITERAL          { Literal($1)            }
   | BLIT             { BoolLit($1)            }
+  | STRINGLIT        { StringLit($1)          }
+  | NOTELIT          { NoteLit($1)            }
   | ID               { Id($1)                 }
   | expr PLUS   expr { Binop($1, Add,   $3)   }
   | expr MINUS  expr { Binop($1, Sub,   $3)   }
