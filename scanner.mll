@@ -53,6 +53,10 @@ rule token = parse
     | "IN" {IN}
     | "NOT" {NOT}
     | "RETURN" {RETURN}
+    | "NUMBER" {INT}
+    | "BOOL" {BOOL}
+    | "TRUE"   { BLIT(TRUE)  }
+    | "FALSE"  { BLIT(FALSE) }
     | "BREAK" {BREAK}
     | "CONTINUE" {CONTINUE}
     | "REPEAT" {REPEAT}
