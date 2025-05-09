@@ -66,8 +66,8 @@ let string_of_op = function
 
  let rec string_of_expr = function
      Literal l      -> string_of_int l
-   | BoolLit true  -> "true"
-   | BoolLit false -> "false"
+   | BoolLit true  -> "TRUE"
+   | BoolLit false -> "FALSE"
    | Id s          -> s
    | Binop (e1, o, e2) ->
      string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
@@ -84,36 +84,36 @@ let rec string_of_stmt = function
   | Continue -> "CONTINUE!\n"
   | If(e, s1, s2) ->  "IF (" ^ string_of_expr e ^ ")\n" ^
                       string_of_stmt s1 ^ "ELSE\n" ^ string_of_stmt s2
-  | While(E, S) -> "WHILE (" ^ string_of_expr E ^ ") " ^ string_of_stmt S
-  | For(X, Y, Z) -> "FOR (" ^ X ^ "IN " ^ string_of_expr Y ^ ") " ^ string_of_stmt Z
-  | Repeat(X, S) -> "REPEAT (" ^ X ^ ") " ^ string_of_stmt S
-  | Print(X) -> "PRINT (" ^ X ^ ")!"
+  | While(e, s) -> "WHILE (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+  | For(x, y, z) -> "FOR (" ^ x ^ "IN " ^ string_of_expr y ^ ") " ^ string_of_stmt z
+  | Repeat(x, s) -> "REPEAT (" ^ x ^ ") " ^ string_of_stmt s
+  | Print(x) -> "PRINT (" ^ x ^ ")!"
   
 
 
 
-let STRING_OF_TYP = function
+let string_of_typ = function
     INT -> "INT"
   | BOOL -> "BOOL"
   | NOTE -> "NOTE"
   | STRING -> "STRING"
 
-let STRING_OF_VDECL (T, ID) = STRING_OF_TYP T ^ " " ^ ID ^ "!\n"
+let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ "!\n"
 
 
-let STRING_OF_VINITIALIZE (T, ID, INITIALIZE) = STRING_OF_TYP T ^ " " ^ ID ^ "=" ^ INITIALIZE ^ "!\n"
+let string_of_vinitialize (t, id, initialize) = string_of_typ t ^ " " ^ id ^ "=" ^ initialize ^ "!\n"
 
 
-let STRING_OF_FDECL FDECL =
-  STRING_OF_TYP FDECL.RTYP ^ " " ^
-  FDECL.FNAME ^ "(" ^ String.concat ", " (List.map snd FDECL.FORMALS) ^
+let string_of_fdecl fdecl =
+  string_of_typ fdecl.rtyp ^ " " ^
+  fdecl.fname ^ "(" ^ String.concat ", " (List.map snd fdecl.formals) ^
   ")\n{\n" ^
-  String.concat "" (List.map STRING_OF_VDECL FDECL.LOCALS) ^
-  String.concat "" (List.map STRING_OF_STMT FDECL.BODY) ^
+  String.concat "" (List.map string_of_vdecl fdecl.locals) ^
+  String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
 
-let STRING_OF_PROGRAM (VARS, FUNCS) =
+let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^
-  String.concat "" (List.map STRING_OF_VDECL VARS) ^ String.concat "" (List.map STRING_OF_VINITIALIZE INITIALIZE) ^ "\n" ^
-  String.concat "\n" (List.map STRING_OF_FDECL FUNCS)
+  String.concat "" (List.map string_of_vdecl vars) ^ String.concat "" (List.map string_of_vinitialize initialize) ^ "\n" ^
+  String.concat "\n" (List.map string_of_fdecl funcs)
