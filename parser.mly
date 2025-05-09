@@ -98,13 +98,19 @@ expr:
   | STRINGLIT        { StringLit($1)          }
   | NOTELIT          { NoteLit($1)            }
   | ID               { Id($1)                 }
-  | expr PLUS   expr { Binop($1, Add,   $3)   }
-  | expr MINUS  expr { Binop($1, Sub,   $3)   }
-  | expr EQ     expr { Binop($1, Equal, $3)   }
-  | expr NEQ    expr { Binop($1, Neq, $3)     }
-  | expr LT     expr { Binop($1, Less,  $3)   }
-  | expr AND    expr { Binop($1, And,   $3)   }
-  | expr OR     expr { Binop($1, Or,    $3)   }
+  | expr PLUS   expr { Binop($1, ADD,   $3)   }
+  | expr MINUS  expr { Binop($1, SUB,   $3)   }
+  | expr TIMES  expr { Binop($1, TIMES,   $3)   }
+  | expr DIVIDE  expr { Binop($1, DIVIDE,   $3)   }
+  | expr EQUAL     expr { Binop($1, EQUAL, $3)   }
+  | expr NEQ    expr { Binop($1, NEQ, $3)     }
+  | expr LEQ    expr { Binop($1, LEQ, $3)     }
+  | expr GEQ    expr { Binop($1, GEQ, $3)     }
+  | expr LT     expr { Binop($1, LT,  $3)   }
+  | expr GT     expr { Binop($1, GT,  $3)   }
+  | expr AND    expr { Binop($1, AND,   $3)   }
+  | expr OR     expr { Binop($1, OR,    $3)   }
+  | NOT expr         { Unop(NOT, $2)          }
   | ID ASSIGN expr   { Assign($1, $3)         }
   | LPAREN expr RPAREN { $2                   }
   /* call */
