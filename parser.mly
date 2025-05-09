@@ -33,6 +33,7 @@ open Ast
 %type <Ast.fdecl list> decls
 
 %right ASSIGN
+%left NOT
 %left OR
 %left AND
 %left EQUAL NEQ LEQ GEQ
