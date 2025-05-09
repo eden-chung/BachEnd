@@ -32,6 +32,8 @@ type expr =
    | Print    of expr
    | Repeat   of expr * stmt               (* repeat n times *)
    | Return   of expr
+   | Continue 
+   | Break    
 
 (* int x: name binding *)
 type bind = typ * string
@@ -78,10 +80,10 @@ let rec string_of_stmt = function
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
   | Return(expr) -> "RETURN " ^ string_of_expr expr ^ "!\n"
-  | Break() -> "BREAK!\n"
-  | Continue() -> "CONTINUE!\n"
-  | If(E, S1, S2) ->  "IF (" ^ string_of_expr E ^ ")\n" ^
-                      string_of_stmt S1 ^ "ELSE\n" ^ string_of_stmt S2
+  | Break -> "BREAK!\n"
+  | Continue -> "CONTINUE!\n"
+  | If(e, s1, s2) ->  "IF (" ^ string_of_expr e ^ ")\n" ^
+                      string_of_stmt s1 ^ "ELSE\n" ^ string_of_stmt s2
   | While(E, S) -> "WHILE (" ^ string_of_expr E ^ ") " ^ string_of_stmt S
   | For(X, Y, Z) -> "FOR (" ^ X ^ "IN " ^ string_of_expr Y ^ ") " ^ string_of_stmt Z
   | Repeat(X, S) -> "REPEAT (" ^ X ^ ") " ^ string_of_stmt S
