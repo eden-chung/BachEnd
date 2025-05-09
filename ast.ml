@@ -7,47 +7,45 @@ type unop = NOT
 type typ = INT | NOTE | STRING | BOOL
 
 type note = {
-PITCH : STRING;
-OCTAVE : INT;
-LENGTH : INT;
+pitch : string;
+octave : int;
+length : int;
 }
 
 type expr =
-    LITEARL of INT
-  | BOOLLIT of BOOL
-  | STRINGLIT of STRING
-  | NOTELIT of NOTE
-  | ID of STRING
-  | BINOP of EXPR * OP * EXPR
-  | UNOP of UNOP * EXPR
-  | ASSIGN of STRING * EXPR
-  (* function call *)
-  | CALL of STRING * EXPR LIST
+    Literal of int
+   | BoolLit   of bool
+   | StringLit of string
+   | NoteLit   of note
+   | Id        of string
+   | Binop     of expr * op * expr
+   | Unop      of unop * expr
+   | Assign    of string * expr
+   | Call      of string * expr list
 
-type stmt =
-    BLOCK of STMT LIST
-  | EXPR of EXPR
-  | IF of EXPR * STMT * STMT
-  | WHILE of EXPR * STMT
-  (* return *)
-  | FOR of EXPR * EXPR * EXPR * STMT (* for loop*)
-  | PRINT of EXPR
-  | REPEAT of EXPR * STMT (* repeat n times loop*)
-  | RETURN of EXPR
+ type stmt =
+     Block    of stmt list
+   | Expr     of expr
+   | If       of expr * stmt * stmt
+   | While    of expr * stmt
+   | For      of expr * expr * expr * stmt  (* for loop *)
+   | Print    of expr
+   | Repeat   of expr * stmt               (* repeat n times *)
+   | Return   of expr
 
 (* int x: name binding *)
-type bind = TYP * STRING
+type bind = typ * string
 
 (* func_def: ret_typ fname formals locals body *)
 type func_def = {
-  RTYP: TYP;
-  FNAME: STRING;
-  FORMALS: BIND LIST;
-  LOCALS: BIND LIST;
-  BODY: STMT LIST;
+   rtyp   : typ;
+   fname  : string;
+   formals: bind list;
+   locals : bind list;
+   body   : stmt list;
 }
 
-type program = BIND LIST * FUNC_DEF LIST
+type program = bind list * func_def list
 
 (* Pretty-printing functions *)
 let STRING_OF_OP = function
@@ -64,30 +62,30 @@ let STRING_OF_OP = function
   | AND -> "&&"
   | OR -> "||"
 
-let rec STRING_OF_EXPR = function
-    LITEARL(l) -> STRING_OF_INT l
-  | BOOLLIT(TRUE) -> "TRUE"
-  | BOOLLIT(FALSE) -> "FALSE"
-  | ID(S) -> S
-  | BINOP(E1, O, E2) ->
-    STRING_OF_EXPR E1 ^ " " ^ STRING_OF_OP O ^ " " ^ STRING_OF_EXPR E2
-  | ASSIGN(V, E) -> V ^ " = " ^ STRING_OF_EXPR E
-  | CALL(F, EL) ->
-      F ^ "(" ^ String.concat ", " (List.map STRING_OF_EXPR EL) ^ ")"
+ let rec string_of_expr = function
+     Literal l      -> string_of_int l
+   | BoolLit true  -> "true"
+   | BoolLit false -> "false"
+   | Id s          -> s
+   | Binop (e1, o, e2) ->
+     string_of_expr e1 ^ " " ^ STRING_OF_OP o ^ " " ^ string_of_expr e2
+   | Assign (v, e) -> v ^ " = " ^ string_of_expr e
+   | Call (f, el)  ->
+       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
 
-let rec STRING_OF_STMT = function
-    BLOCK(STMTS) ->
-    "{\n" ^ String.concat "" (List.map STRING_OF_STMT STMTS) ^ "}\n"
-  | EXPR(EXPR) -> STRING_OF_EXPR EXPR ^ ";\n"
-  | RETURN(EXPR) -> "RETURN " ^ STRING_OF_EXPR EXPR ^ "!\n"
-  | BREAK() -> "BREAK!\n"
-  | CONTINUE() -> "CONTINUE!\n"
-  | IF(E, S1, S2) ->  "IF (" ^ STRING_OF_EXPR E ^ ")\n" ^
-                      STRING_OF_STMT S1 ^ "ELSE\n" ^ STRING_OF_STMT S2
-  | WHILE(E, S) -> "WHILE (" ^ STRING_OF_EXPR E ^ ") " ^ STRING_OF_STMT S
-  | FOR(X, Y, Z) -> "FOR (" ^ X ^ "IN " ^ STRING_OF_EXPR Y ^ ") " ^ STRING_OF_STMT Z
-  | REPEAT(X, S) -> "REPEAT (" ^ X ^ ") " ^ STRING_OF_STMT S
-  | PRINT(X) -> "PRINT (" ^ X ^ ")!"
+let rec string_of_stmt = function
+    Block(stmts) ->
+    "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
+  | Expr(expr) -> string_of_expr expr ^ ";\n"
+  | Return(expr) -> "RETURN " ^ string_of_expr expr ^ "!\n"
+  | Break() -> "BREAK!\n"
+  | Continue() -> "CONTINUE!\n"
+  | If(E, S1, S2) ->  "IF (" ^ string_of_expr E ^ ")\n" ^
+                      string_of_stmt S1 ^ "ELSE\n" ^ string_of_stmt S2
+  | While(E, S) -> "WHILE (" ^ string_of_expr E ^ ") " ^ string_of_stmt S
+  | For(X, Y, Z) -> "FOR (" ^ X ^ "IN " ^ string_of_expr Y ^ ") " ^ string_of_stmt Z
+  | Repeat(X, S) -> "REPEAT (" ^ X ^ ") " ^ string_of_stmt S
+  | Print(X) -> "PRINT (" ^ X ^ ")!"
   
 
 
