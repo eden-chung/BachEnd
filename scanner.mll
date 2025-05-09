@@ -8,7 +8,7 @@ let whitespace = [' ' '\t' '\r']
 let alpha_lower = ['a'-'z']
 let id = alpha_lower alphanumeric+ (* must be at least 2 characters long*)
 
-let NUMBER = '-'? ('0' | (['1'-'9'] digit*))
+let INT = '-'? ('0' | (['1'-'9'] digit*))
 let string_body = ['a'-'z' 'A'-'Z' '0'-'9']*
 let STRING = '"' string_body '"'
 
@@ -64,7 +64,7 @@ rule token = parse
     | "TREBLE" {TREBLE}
     | "BASS" {BASS}
 
-    | NUMBER as lxm {NUMBER(int_of_string lxm)}
+    | INT as lxm {INT(int_of_string lxm)}
     | STRING as lxm {STRING lxm}
     | NOTE as lxm {NOTE lxm}
     | id as lxm {ID lxm}
