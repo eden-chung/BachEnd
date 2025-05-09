@@ -113,7 +113,7 @@ let string_of_fdecl fdecl =
   "}\n"
 
 
-let string_of_program (vars, funcs) =
+let string_of_program (vars, funcs, initialize) =
   "\n\nParsed program: \n\n" ^
   String.concat "" (List.map string_of_vdecl vars) ^ String.concat "" (List.map string_of_vinitialize initialize) ^ "\n" ^
   String.concat "\n" (List.map string_of_fdecl funcs)
