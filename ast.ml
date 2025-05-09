@@ -1,14 +1,25 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = Add | Sub | Equal | Neq | Less | And | Or
+type op = ADD | SUB | REPEAT | CONTINUE | BREAK | EQUAL | NEQ | LT | GT | LEQ | GEQ | AND | OR | TIMES | DIVIDE
 
-type typ = Int | Bool
+type unop = NOT
+
+type typ = Int | Note | String | Bool
+
+type note = {
+pitch : string;
+octave : int;
+length : int;
+}
 
 type expr =
     Literal of int
   | BoolLit of bool
+  | StringLit of string
+  | NoteLit of note
   | Id of string
   | Binop of expr * op * expr
+  | Unop of unop * expr
   | Assign of string * expr
   (* function call *)
   | Call of string * expr list
@@ -19,6 +30,9 @@ type stmt =
   | If of expr * stmt * stmt
   | While of expr * stmt
   (* return *)
+  | For of expr * expr * expr * stmt (* for loop*)
+  | Print of expr
+  | Repeat of expr * stmt (* repeat n times loop*)
   | Return of expr
 
 (* int x: name binding *)
@@ -41,7 +55,12 @@ let string_of_op = function
   | Sub -> "-"
   | Equal -> "=="
   | Neq -> "!="
-  | Less -> "<"
+  | Leq -> "<="
+  | Geq -> ">="
+  | LT -> "<"
+  | GT -> ">"
+  | Times -> "*"
+  | Divide -> "/"
   | And -> "&&"
   | Or -> "||"
 
