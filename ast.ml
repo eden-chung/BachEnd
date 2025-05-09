@@ -82,7 +82,6 @@ let rec string_of_stmt = function
   | Return(expr) -> "RETURN " ^ string_of_expr expr ^ "!\n"
   | Break() -> "BREAK!\n"
   | Continue() -> "CONTINUE!\n"
-
   | If(e, s1, s2) ->  "IF (" ^ string_of_expr e ^ ")\n" ^
                       string_of_stmt s1 ^ "ELSE\n" ^ string_of_stmt s2
   | While(e, s) -> "WHILE (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
@@ -94,10 +93,16 @@ let rec string_of_stmt = function
 
 
 let string_of_typ = function
-    Int -> "int"
-  | Bool -> "bool"
+    Int -> "INT"
+  | Bool -> "BOOL"
+  | Note -> "NOTE"
+  | String -> "STRING"
 
-let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
+let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ "!\n"
+
+
+let string_of_vinitialize (t, id, initialize) = string_of_typ t ^ " " ^ id ^ "=" ^ initialize ^ "!\n"
+
 
 let string_of_fdecl fdecl =
   string_of_typ fdecl.rtyp ^ " " ^
@@ -107,7 +112,8 @@ let string_of_fdecl fdecl =
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
+
 let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^
-  String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
+  String.concat "" (List.map string_of_vdecl vars) ^ String.concat "" (List.map string_of_vinitialize initialize) ^ "\n" ^
   String.concat "\n" (List.map string_of_fdecl funcs)
