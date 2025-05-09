@@ -103,22 +103,24 @@ let string_of_typ = function
   | NOTE -> "NOTE"
   | STRING -> "STRING"
 
+(*
 type vdecl =
   | Vdecl     of typ * string
   | Vinitialize of typ * string * string
-
+*)
+(*
 let string_of_vdecl = function
   | Vdecl (t, id) ->
       string_of_typ t ^ " " ^ id ^ "!\n"
   | Vinitialize (t, id, init) ->
       string_of_typ t ^ " " ^ id ^ " = " ^ init ^ "!\n"
+*)
 
-/*
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ "!\n"
 
 
 let string_of_vinitialize (t, id, initialize) = string_of_typ t ^ " " ^ id ^ "=" ^ initialize ^ "!\n"
-*/
+
 
 let string_of_fdecl fdecl =
   string_of_typ fdecl.rtyp ^ " " ^
