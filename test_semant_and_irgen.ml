@@ -1,12 +1,13 @@
 (* test_semant_irgen.ml *)
 
 open Ast
+(* open Sast *)
 open Semant
 open Irgen
 open Llvm
 
 (* Helper function to run semantic check and IR generation, then prINT results *)
-let run_test name program =
+(* let run_test name program =
   print_endline ("Test " ^ name);
   try
     (* Semantic analysis *)
@@ -19,6 +20,27 @@ let run_test name program =
     print_endline "--- Generated LLVM IR ---";
     print_endline ir;
     print_endline "--- End of IR ---";
+  with Failure msg ->
+    print_endline ("  Test failed ❌: " ^ msg) *)
+
+let run_test name program =
+  print_endline ("Test " ^ name);
+  try
+    let sast_prog = check program in
+    print_endline "  Semantic check passed ✅";
+    let lilypond_code = translate sast_prog in
+    print_endline "  LilyPond generation passed ✅";
+    print_endline "--- Generated LilyPond Code ---";
+    print_endline lilypond_code;
+    print_endline "--- End of LilyPond Code ---";
+
+    (* Optional: write to file and invoke lilypond *)
+    let output_file = name ^ ".ly" in
+    let oc = open_out output_file in
+    output_string oc lilypond_code;
+    close_out oc;
+    let cmd = Printf.sprintf "lilypond -o %s %s" name output_file in
+    ignore (Sys.command cmd)
   with Failure msg ->
     print_endline ("  Test failed ❌: " ^ msg)
 
@@ -248,12 +270,109 @@ let test13 () =
       body = [ Repeat(Literal 5, Block exprs); Return (Literal 0) ];
     } in
     run_test "13: REPEAT notes" ([], [dummy_func])
-  
+
+
+    (* let test_transpose_up () =
+      let note = { pitch = "c"; octave = 4; length = 4 } in
+      let transpose_call = Call("transpose", [Literal 1]) in
+      let transpose_block =
+        Block [
+          Expr(NoteLit note);
+          Expr(NoteLit note)
+        ]
+      in
+      let dummy_func = {
+        rtyp = INT;
+        fname = "main";
+        formals = [];
+        locals = [];
+        body = [
+          Expr(transpose_call);  (* this sets up the transpose amount *)
+          transpose_block;       (* this is the block to transpose *)
+          Return (Literal 0)
+        ]
+      } in
+      run_test "Transpose Up" ([], [dummy_func]) *)
+(*     
+      let test_transpose_up () =
+        let note = { pitch = "c"; octave = 4; length = 4 } in
+        let transpose_stmt =
+          Transpose(Literal 1, Block [
+            Expr(NoteLit note);
+            Expr(NoteLit note);
+            Expr(NoteLit note);
+            Expr(NoteLit note)
+          ])
+        in
+        let dummy_func = {
+          rtyp = INT;
+          fname = "main";
+          formals = [];
+          locals = [];
+          body = [
+            transpose_stmt;
+            Return (Literal 0)
+          ]
+        } in
+        run_test "Transpose Up" ([], [dummy_func])
+      
+    
+     *)
+
+     (* let test_transpose_up () =
+      let note = { pitch = "c"; octave = 4; length = 4 } in
+      let dummy_func = {
+        rtyp   = INT;
+        fname  = "main";
+        formals= [];
+        locals = [];
+        body   = [
+          Expr(Call("transpose", [Literal 1]));
+          Block [
+            Expr(NoteLit note);
+            Expr(NoteLit note);
+            Expr(NoteLit note);
+            Expr(NoteLit note);
+          ];
+          Return(Literal 0)
+        ]
+      } in
+      run_test "Transpose Up" ([], [dummy_func])
+     *)
+
+     let test_transpose_up () =
+      let note = { pitch = "c"; octave = 4; length = 4 } in
+      let dummy_func = {
+        rtyp   = INT;
+        fname  = "main";
+        formals= [];
+        locals = [];
+        body   = [
+          Transpose(Literal 1, Block [
+            Expr (NoteLit note);
+            Expr (NoteLit note);
+            Expr (NoteLit note);
+            Expr (NoteLit note);
+          ]);
+          Return (Literal 0)
+        ]
+      } in
+      run_test "Transpose Up" ([], [dummy_func])
+    
+
 
 
 (* Execute all tests *)
 let () =
-  test1 (); 
+  (* test1 (); 
   test3 ();
   test5 (); 
-  test7 (); test8 (); test9 (); test10 (); test11(); test12(); test13_prime(); test13();
+  test7 ();
+  test8 ();
+  test9 ();
+  test10 ();
+  test11();
+  test12();
+  test13_prime(); *)
+  (* test13(); *)
+  test_transpose_up();

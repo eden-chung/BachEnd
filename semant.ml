@@ -164,6 +164,13 @@ let check (globals, functions) =
           | INT | BOOL | NOTE -> SPrint(t, e') (* can modify this later*)
           | _ -> raise (Failure ("cannot print expression of type " ^ string_of_typ t ^ " in " ^ string_of_expr e))
         end
+      | Transpose (e, body) ->
+        let e' = check_expr e in
+        let sbody = check_stmt body in
+        if fst e' = INT then
+          STranspose (e', sbody)
+        else
+          raise (Failure "Transpose amount must be an integer")
       | Return e ->
         let (t, e') = check_expr e in
         if t = func.rtyp then SReturn (t, e')

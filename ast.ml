@@ -32,6 +32,7 @@ type expr =
    | Print    of expr
    | Repeat   of expr * stmt               (* repeat n times *)
    | Return   of expr
+   | Transpose of expr * stmt
    | Write of stmt
    | Continue 
    | Break    

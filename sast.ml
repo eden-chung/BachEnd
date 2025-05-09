@@ -23,6 +23,7 @@ type sstmt =
   | SPrint of sexpr
   | SRepeat of sexpr * sstmt 
   | SWrite of sstmt
+  | STranspose of sexpr * sstmt
   (* return statement *)
   | SReturn of sexpr
 

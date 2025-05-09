@@ -15,10 +15,53 @@
 module L = Llvm
 module A = Ast
 open Sast
+open Ast
 
 (* input is ast and output is an llvm*)
 
 module StringMap = Map.Make(String)
+
+
+  let pitch_to_semitone pitch octave =
+    let normalize = String.lowercase_ascii pitch in
+    let semitone = match normalize with
+      | "c"             -> 0
+      | "c#" | "db"     -> 1
+      | "cis"           -> 1    (* LilyPond’s C♯ *)
+      | "d"             -> 2
+      | "d#" | "eb"     -> 3
+      | "dis" | "ees"   -> 3    (* D♯ / E♭ *)
+      | "e"             -> 4
+      | "f"             -> 5
+      | "f#" | "gb"     -> 6
+      | "fis" | "ges"   -> 6    (* F♯ / G♭ *)
+      | "g"             -> 7
+      | "g#" | "ab"     -> 8
+      | "gis" | "aes"   -> 8    (* G♯ / A♭ *)
+      | "a"             -> 9
+      | "a#" | "bb"     -> 10
+      | "ais" | "bes"   -> 10   (* A♯ / B♭ *)
+      | "b"             -> 11
+      | "r"             -> 0    (* you already special-case rests elsewhere *)
+      | _ -> failwith ("Unknown pitch for transposition: " ^ pitch)
+    in
+    octave * 12 + semitone
+  
+
+let semitone_to_pitch semitone =
+  let all_pitches = [| "c"; "cis"; "d"; "dis"; "e"; "f"; "fis"; "g"; "gis"; "a"; "ais"; "b" |] in
+  let pitch_class = (semitone mod 12 + 12) mod 12 in
+  let octave = semitone / 12 in
+  (all_pitches.(pitch_class), octave)
+
+let transpose_note note semitone_shift =
+  if note.pitch = "r" then note
+  else
+    let original = pitch_to_semitone note.pitch note.octave in
+    let shifted = original + semitone_shift in
+    let (new_pitch, new_octave) = semitone_to_pitch shifted in
+    { note with pitch = new_pitch; octave = new_octave }
+
 
 (* translate : Sast.program -> Llvm.module *)
 let translate (globals, functions) = (* global variables and a list of functions is the input. the output is the LLVRM IR code*)
@@ -63,33 +106,39 @@ let translate (globals, functions) = (* global variables and a list of functions
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
 
-
-    (* mapping between Bachend strings and lilypond*)
     let pitch_to_lilypond pitch =
       match String.lowercase_ascii pitch with
       | "c"  -> "c"
-      | "c#" -> "cis"
-      | "db" -> "des"
+      | "c#" | "db"     -> "cis"
       | "d"  -> "d"
-      | "d#" -> "dis"
-      | "eb" -> "ees"
+      | "d#" | "eb"     -> "dis"
       | "e"  -> "e"
       | "f"  -> "f"
-      | "f#" -> "fis"
-      | "gb" -> "ges"
+      | "f#" | "gb"     -> "fis"
       | "g"  -> "g"
-      | "g#" -> "gis"
-      | "ab" -> "aes"
+      | "g#" | "ab"     -> "gis"
       | "a"  -> "a"
-      | "a#" -> "ais"
-      | "bb" -> "bes"
+      | "a#" | "bb"     -> "ais"
       | "b"  -> "b"
       | "r"  -> "r"
-      | _ -> failwith ("Unknown pitch: " ^ pitch)
+    
+      | "cis" -> "cis"
+      | "des" -> "des"
+      | "dis" -> "dis"
+      | "ees" -> "ees"
+      | "fis" -> "fis"
+      | "ges" -> "ges"
+      | "gis" -> "gis"
+      | "aes" -> "aes"
+      | "ais" -> "ais"
+      | "bes" -> "bes"
+    
+      | x -> failwith ("Unknown pitch: " ^ x)
     in
+    
 
     (* convert the input into lilypond *)
-    let lilypond_of_body stmts =
+    (* let lilypond_of_body stmts =
       let rec aux acc = function
         | [] ->
             List.rev acc
@@ -132,46 +181,47 @@ let translate (globals, functions) = (* global variables and a list of functions
       in
       aux [] stmts
       |> String.concat " "    
-    in
+    in *)
+
+    let lilypond_of_body stmts =
+      let rec aux acc transpose_amt = function
+        | [] -> List.rev acc
+        | SExpr (_, SNoteLit note) :: rest ->
+            let transposed_note = transpose_note note transpose_amt in
+            let token =
+              if transposed_note.pitch = "r" then
+                Printf.sprintf "r%d" transposed_note.length
+              else
+                let p = pitch_to_lilypond transposed_note.pitch in
+                let oct =
+                  if transposed_note.octave = 3 then ""
+                  else if transposed_note.octave > 3 then String.make (transposed_note.octave - 3) '\''
+                  else String.make (3 - transposed_note.octave) ','
+                in
+                Printf.sprintf "%s%s%d" p oct transposed_note.length
+            in
+            aux (token :: acc) transpose_amt rest
     
-    (* let lilypond_of_body stmts =
-      stmts
-      |> List.filter_map (function
-           | SExpr (_, SNoteLit note) ->
-               (* unpack the record *)
-               let p = pitch_to_lilypond note.pitch in
-               let dur = note.length in
-               (* for rests (pitch = "r") we omit the octave suffix *)
-               let oct_suffix =
-                 if note.pitch = "r" then ""
-                 else if note.octave = 4 then "'"
-                 else if note.octave > 4 then String.make (note.octave - 4) '\''
-                 else String.make (4 - note.octave) ','
-               in
-               Some (Printf.sprintf "%s%s%d" p oct_suffix dur)
-            | SRepeat (count_expr, body_stmt) :: rest ->
-            (* we only support literal counts here; semantics ensures it's an int *)
-            let n =
-              match fst count_expr with
-              | SLiteral i -> i
-              | _ -> failwith "REPEAT count must be a literal"
+        | SRepeat ((_, SLiteral count), body_stmt) :: rest ->
+            let body_stmts = match body_stmt with SBlock l -> l | stmt -> [stmt] in
+            let rec repeat k acc' =
+              if k = 0 then acc'
+              else repeat (k-1) (aux acc' transpose_amt body_stmts)
             in
-            (* extract the sub-stmts of the body *)
-            let block_stmts =
-              match body_stmt with
-              | SBlock l -> l
-              | _       -> [body_stmt]
-            in
-            (* unroll it n times *)
-            let rec repeat k acc =
-              if k = 0 then acc
-              else repeat (k-1) (aux acc block_stmts)
-            in
-            aux (repeat n acc) rest
-           | _ -> None)
+            aux (repeat count acc) transpose_amt rest
+    
+        | STranspose ((_, SLiteral n), stmt) :: rest ->
+          let inner_stmts = match stmt with SBlock l -> l | s -> [s] in
+          let acc' = aux acc (transpose_amt + n) inner_stmts in
+          aux acc' transpose_amt rest
+      
+    
+        | _ :: rest -> aux acc transpose_amt rest
+      in
+      aux [] 0 stmts
       |> String.concat " "
     in
-     *)
+  
 
   (* Fill in the body of the given function *)
   let build_function_body fdecl =
@@ -310,6 +360,9 @@ let translate (globals, functions) = (* global variables and a list of functions
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
         L.builder_at_end context end_bb
       | SRepeat (_, _) ->
+        (* don't need any LLVM code; *)
+        builder
+      | STranspose (_, _) ->
         (* don't need any LLVM code; *)
         builder
 
