@@ -45,6 +45,8 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left NOT
+%right NOT
+%nonassoc LOWER_THAN_ELSE
 
 
 %token EOF
@@ -72,6 +74,8 @@ stmt_list_rule:
 stmt_rule:
     expr_rule SEMI                                      { Expr $1         }
   | LBRACE stmt_list_rule RBRACE                        { Block $2        }
+  | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule { If ($3, $5, $7) }
+  | IF LPAREN expr_rule RPAREN stmt_rule %prec LOWER_THAN_ELSE { If ($3, $5, Block []) }
   | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule { If ($3, $5, $7) }
   | WHILE LPAREN expr_rule RPAREN stmt_rule             { While ($3, $5)  }
   | FOR LPAREN expr_rule SEMI expr_rule SEMI expr_rule RPAREN stmt_rule
