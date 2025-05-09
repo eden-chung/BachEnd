@@ -71,7 +71,7 @@ let string_of_unop = function
    | BoolLit true  -> "TRUE"
    | BoolLit false -> "FALSE"
    | StringLit s -> s
-   | NoteLit n -> n.pitch ^string_of_int n.octave ^ string_of_int n.length
+   | NoteLit n -> string_of_int n.length ^ n.pitch ^string_of_int n.octave
    | Id s          -> s
    | Binop (e1, o, e2) ->
      string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
