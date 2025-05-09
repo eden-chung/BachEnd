@@ -59,7 +59,7 @@ vdecl_list:
 
 /* int x */
 vdecl:
-  typ ID                                    { ($1, $2) }
+  typ ID EXCLAMATION                                    { ($1, $2) }
   /*
   | typ ID ASSIGN STRING_LITERAL            { Vinitialize($1, $2, $4) }
   */
@@ -69,7 +69,7 @@ typ:
     INT   { INT   }
   | BOOL  { BOOL  }
   | NOTE  { NOTE  }
-  | ID  { STRING  }
+  | STRING  { STRING  }
 
 /* fdecl */
 fdecl:
@@ -98,7 +98,7 @@ stmt_list:
   | stmt stmt_list  { $1::$2 }
 
 stmt:
-    expr SEMI                               { Expr $1      }
+    expr EXCLAMATION                               { Expr $1      }
   | LBRACE stmt_list RBRACE                 { Block $2 }
   /* if (condition) { block1} else {block2} */
   /* if (condition) stmt else stmt */
