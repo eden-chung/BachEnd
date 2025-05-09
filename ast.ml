@@ -1,6 +1,6 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = ADD | SUB | REPEAT | CONTINUE | BREAK | EQUAL | NEQ | LT | GT | LEQ | GEQ | AND | OR | TIMES | DIVIDE
+type op = ADD | SUB | EQUAL | NEQ | LT | GT | LEQ | GEQ | AND | OR | TIMES | DIVIDE
 
 type unop = NOT
 
@@ -63,6 +63,8 @@ let string_of_op = function
   | DIVIDE -> "/"
   | AND -> "&&"
   | OR -> "||"
+let string_of_unop = function
+  | NOT -> "NOT"
 
  let rec string_of_expr = function
      Literal l      -> string_of_int l
@@ -71,6 +73,7 @@ let string_of_op = function
    | Id s          -> s
    | Binop (e1, o, e2) ->
      string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
+   | Unop (u, e) -> string_of_unop u ^ " " ^ string_of_expr e
    | Assign (v, e) -> v ^ " = " ^ string_of_expr e
    | Call (f, el)  ->
        f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
