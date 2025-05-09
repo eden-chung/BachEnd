@@ -210,10 +210,17 @@ let translate (globals, functions) = (* global variables and a list of functions
             in
             aux (repeat count acc) transpose_amt rest
     
-        | STranspose ((_, SLiteral n), stmt) :: rest ->
+        (* | STranspose ((_, SLiteral n), stmt) :: rest ->
           let inner_stmts = match stmt with SBlock l -> l | s -> [s] in
           let acc' = aux acc (transpose_amt + n) inner_stmts in
-          aux acc' transpose_amt rest
+          aux acc' transpose_amt rest *)
+
+          | STranspose ((_, SLiteral n), stmt) :: rest ->
+            let inner_stmts = match stmt with SBlock l -> l | s -> [s] in
+            let tokens = aux [] (transpose_amt + n) inner_stmts in
+            let acc' = List.rev_append tokens acc in
+            aux acc' transpose_amt rest
+        
       
     
         | _ :: rest -> aux acc transpose_amt rest

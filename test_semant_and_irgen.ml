@@ -342,22 +342,44 @@ let test13 () =
 
      let test_transpose_up () =
       let note = { pitch = "c"; octave = 4; length = 4 } in
+      let note2 = { pitch = "d"; octave = 4; length = 4 } in
+      let note3 = { pitch = "e"; octave = 4; length = 4 } in
+      let note4 = { pitch = "f"; octave = 4; length = 4 } in
       let dummy_func = {
         rtyp   = INT;
         fname  = "main";
         formals= [];
         locals = [];
         body   = [
-          Transpose(Literal 1, Block [
+          Transpose(Literal 2, Block [
             Expr (NoteLit note);
-            Expr (NoteLit note);
-            Expr (NoteLit note);
-            Expr (NoteLit note);
+            Expr (NoteLit note2);
+            Expr (NoteLit note3);
+            Expr (NoteLit note4);
           ]);
           Return (Literal 0)
         ]
       } in
       run_test "Transpose Up" ([], [dummy_func])
+
+      let test_transpose_down () =
+        let note = { pitch = "c"; octave = 4; length = 4 } in
+        let dummy_func = {
+          rtyp   = INT;
+          fname  = "main";
+          formals= [];
+          locals = [];
+          body   = [
+            Transpose(Literal (-2), Block [
+              Expr (NoteLit note);
+              Expr (NoteLit note);
+              Expr (NoteLit note);
+              Expr (NoteLit note);
+            ]);
+            Return (Literal 0)
+          ]
+        } in
+        run_test "Transpose Down" ([], [dummy_func])
     
 
 
@@ -374,5 +396,7 @@ let () =
   test11();
   test12();
   test13_prime(); *)
+  test11();
   (* test13(); *)
   test_transpose_up();
+  test_transpose_down();
