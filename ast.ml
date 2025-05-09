@@ -29,8 +29,8 @@ type expr =
    | If       of expr * stmt * stmt
    | While    of expr * stmt
    | For      of string * expr * stmt  (* for loop *)
-   | Print    of string
-   | Repeat   of int * stmt               (* repeat n times *)
+   | Print    of expr
+   | Repeat   of expr * stmt               (* repeat n times *)
    | Return   of expr
    | Continue 
    | Break    
@@ -91,8 +91,8 @@ let rec string_of_stmt = function
                       string_of_stmt s1 ^ "ELSE\n" ^ string_of_stmt s2
   | While(e, s) -> "WHILE (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
   | For(x, y, z) -> "FOR (" ^ x ^ "IN " ^ string_of_expr y ^ ") " ^ string_of_stmt z
-  | Repeat(x, s) -> "REPEAT (" ^string_of_int x ^ ") " ^ string_of_stmt s
-  | Print(x) -> "PRINT (" ^ x ^ ")!"
+  | Repeat(x, s) -> "REPEAT (" ^string_of_expr x ^ ") " ^ string_of_stmt s
+  | Print(x) -> "PRINT (" ^ string_of_expr x ^ ")!"
   
 
 
