@@ -1,18 +1,18 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
-type OP = ADD | SUB | REPEAT | CONTINUE | BREAK | EQUAL | NEQ | LT | GT | LEQ | GEQ | AND | OR | TIMES | DIVIDE
+type op = ADD | SUB | REPEAT | CONTINUE | BREAK | EQUAL | NEQ | LT | GT | LEQ | GEQ | AND | OR | TIMES | DIVIDE
 
-type UNOP = NOT
+type unop = NOT
 
-type TYP = INT | NOTE | STRING | BOOL
+type typ = INT | NOTE | STRING | BOOL
 
-type NOTE = {
+type note = {
 PITCH : STRING;
 OCTAVE : INT;
 LENGTH : INT;
 }
 
-type EXPR =
+type expr =
     LITEARL of INT
   | BOOLLIT of BOOL
   | STRINGLIT of STRING
@@ -24,7 +24,7 @@ type EXPR =
   (* function call *)
   | CALL of STRING * EXPR LIST
 
-type STMT =
+type stmt =
     BLOCK of STMT LIST
   | EXPR of EXPR
   | IF of EXPR * STMT * STMT
@@ -36,10 +36,10 @@ type STMT =
   | RETURN of EXPR
 
 (* int x: name binding *)
-type BIND = TYP * STRING
+type bind = TYP * STRING
 
 (* func_def: ret_typ fname formals locals body *)
-type FUNC_DEF = {
+type func_def = {
   RTYP: TYP;
   FNAME: STRING;
   FORMALS: BIND LIST;
@@ -47,7 +47,7 @@ type FUNC_DEF = {
   BODY: STMT LIST;
 }
 
-type PROGRAM = BIND LIST * FUNC_DEF LIST
+type program = BIND LIST * FUNC_DEF LIST
 
 (* Pretty-printing functions *)
 let STRING_OF_OP = function
