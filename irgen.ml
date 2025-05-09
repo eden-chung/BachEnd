@@ -89,26 +89,53 @@ let translate (globals, functions) = (* global variables and a list of functions
     in
 
     (* convert the input into lilypond *)
-    (* let lilypond_of_body stmts =
-      let note_strs =
-        stmts
-        |> List.filter_map (function
-            | SExpr (_, SNote (pitch, octave, duration)) ->
-                let p = pitch_to_lilypond pitch in
-                let oct_suffix =
-                  if pitch = "r" then ""
-                  else if octave = 4 then "'"
-                  else if octave > 4 then String.make (octave - 4) '\''
-                  else String.make (4 - octave) ','
-                in
-                Some (Printf.sprintf "%s%d%s" p duration oct_suffix)
-            | SExpr (_, SRest duration) ->
-                Some (Printf.sprintf "%dr" duration)
-            | _ -> None)
-      in
-      String.concat " " note_strs
-    in *)
     let lilypond_of_body stmts =
+      let rec aux acc = function
+        | [] ->
+            List.rev acc
+    
+        (* Note or rest in one go *)
+        | SExpr (_, SNoteLit note) :: rest ->
+            let token =
+              if note.pitch = "r" then
+                (* rest *)
+                Printf.sprintf "%dr" note.length
+              else
+                (* pitch *)
+                let p = pitch_to_lilypond note.pitch in
+                let oct =
+                  if note.octave = 4 then "'" 
+                  else if note.octave > 4 then String.make (note.octave - 4) '\''
+                  else String.make (4 - note.octave) ','
+                in
+                Printf.sprintf "%s%s%d" p oct note.length
+            in
+            aux (token :: acc) rest
+    
+          (* repeat the notes n times*)
+        | SRepeat ((_, SLiteral count), body_stmt) :: rest ->
+            let body_stmts =
+              match body_stmt with
+              | SBlock l -> l
+              | stmt     -> [stmt]
+            in
+            let rec repeat k acc' =
+              if k = 0 then acc' else repeat (k-1) (aux acc' body_stmts)
+            in
+            aux (repeat count acc) rest
+    
+        | SRepeat _ :: _ ->
+            failwith "REPEAT count must be a literal"
+    
+        | _ :: rest ->
+            aux acc rest
+      in
+      aux [] stmts
+      |> List.rev
+      |> String.concat " "    
+    in
+    
+    (* let lilypond_of_body stmts =
       stmts
       |> List.filter_map (function
            | SExpr (_, SNoteLit note) ->
@@ -123,11 +150,29 @@ let translate (globals, functions) = (* global variables and a list of functions
                  else String.make (4 - note.octave) ','
                in
                Some (Printf.sprintf "%s%s%d" p oct_suffix dur)
-    
+            | SRepeat (count_expr, body_stmt) :: rest ->
+            (* we only support literal counts here; semantics ensures it's an int *)
+            let n =
+              match fst count_expr with
+              | SLiteral i -> i
+              | _ -> failwith "REPEAT count must be a literal"
+            in
+            (* extract the sub-stmts of the body *)
+            let block_stmts =
+              match body_stmt with
+              | SBlock l -> l
+              | _       -> [body_stmt]
+            in
+            (* unroll it n times *)
+            let rec repeat k acc =
+              if k = 0 then acc
+              else repeat (k-1) (aux acc block_stmts)
+            in
+            aux (repeat n acc) rest
            | _ -> None)
       |> String.concat " "
     in
-    
+     *)
 
   (* Fill in the body of the given function *)
   let build_function_body fdecl =
@@ -265,6 +310,9 @@ let translate (globals, functions) = (* global variables and a list of functions
 
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
         L.builder_at_end context end_bb
+      | SRepeat (_, _) ->
+        (* don't need any LLVM code; *)
+        builder
 
     in
     (* Build the code for each statement in the function *)
