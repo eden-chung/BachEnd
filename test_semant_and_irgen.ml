@@ -139,7 +139,40 @@ let test8 () =
   } in
   run_test "8: non-bool while" ([], [dummy_func])
 
+(* Test 9: Valid program with a single note literal *)
+let test9 () =
+  let note_value = { pitch = "c"; octave = 4; length = 4 } in
+  let dummy_func = {
+    rtyp = Int;
+    fname = "notes";
+    formals = [];
+    locals = [];
+    body = [
+      Expr(NoteLit note_value);
+      Return (Literal 0)
+    ]
+  } in
+  run_test "Note literal" ([], [dummy_func])
+
+(* Test 10: Valid program with multiple notes and varying octaves *)
+let test10 () =
+  let notes = [
+    { pitch = "c";  octave = 4; length = 4 };
+    { pitch = "d#"; octave = 5; length = 2 };
+    { pitch = "bb"; octave = 3; length = 1 };
+    { pitch = "r";  octave = 0; length = 4 };
+  ] in
+  let exprs = List.map (fun n -> Expr(NoteLit n)) notes in
+  let dummy_func = {
+    rtyp = Int;
+    fname = "melody";
+    formals = [];
+    locals = [];
+    body = exprs @ [ Return (Literal 0) ]
+  } in
+  run_test "Melody" ([], [dummy_func])
+
 (* Execute all tests *)
 let () =
   test1 (); test2 (); test3 (); test4 ();
-  test5 (); test6 (); test7 (); test8 ();
+  test5 (); test6 (); test7 (); test8 (); test9 (); test10 ();
