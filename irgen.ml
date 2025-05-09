@@ -338,10 +338,14 @@ let translate (globals, functions) = (* global variables and a list of functions
     (* append sections *)
     let full_score = header ^ raw_body ^ footer in
 
-    Printf.printf "%s\n" full_score
+    (* Printf.printf "%s\n" full_score *)
+    full_score
 
   in
 
-  List.iter build_function_body functions;
-  the_module
+  (* List.iter build_function_body functions;
+  the_module *)
   (* returns module. is a container that stores llvm/ir code. returns a container for ir code*)
+
+  let scores = List.map build_function_body functions in
+  String.concat "\n\n" scores
