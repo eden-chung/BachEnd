@@ -35,9 +35,9 @@ let translate (globals, functions) = (* global variables and a list of functions
 
   (* Return the LLVM type for a MicroC type *)
   let ltype_of_typ = function
-      A.Int   -> i32_t
-    | A.Bool  -> i1_t
-    | A.Note -> L.pointer_type i8_t (* maybe modify this later depending on how we represent note*)
+      A.INT   -> i32_t
+    | A.BOOL  -> i1_t
+    | A.NOTE -> L.pointer_type i8_t (* maybe modify this later depending on how we represent note*)
   in
 
   (* Create a map of global variables after creating each *)
@@ -245,13 +245,13 @@ let translate (globals, functions) = (* global variables and a list of functions
         let e1' = build_expr builder e1
         and e2' = build_expr builder e2 in
         (match op with
-           A.Add     -> L.build_add
-         | A.Sub     -> L.build_sub
-         | A.And     -> L.build_and
-         | A.Or      -> L.build_or
-         | A.Equal   -> L.build_icmp L.Icmp.Eq
-         | A.Neq     -> L.build_icmp L.Icmp.Ne
-         | A.Less    -> L.build_icmp L.Icmp.Slt
+           A.ADD     -> L.build_add
+         | A.SUB     -> L.build_sub
+         | A.AND     -> L.build_and
+         | A.OR      -> L.build_or
+         | A.EQUAL   -> L.build_icmp L.Icmp.Eq
+         | A.NEQ     -> L.build_icmp L.Icmp.Ne
+         | A.LT    -> L.build_icmp L.Icmp.Slt
         ) e1' e2' "tmp" builder
       | SCall ("print", [e]) ->
         L.build_call printf_func [| int_format_str ; (build_expr builder e) |]

@@ -5,7 +5,7 @@ open Semant
 open Irgen
 open Llvm
 
-(* Helper function to run semantic check and IR generation, then print results *)
+(* Helper function to run semantic check and IR generation, then prINT results *)
 let run_test name program =
   print_endline ("Test " ^ name);
   try
@@ -25,10 +25,10 @@ let run_test name program =
 (* Test 1: Valid program with a simple function *)
 let test1 () =
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
-    formals = [(Int, "x")];
-    locals = [(Int, "y")];
+    formals = [(INT, "x")];
+    locals = [(INT, "y")];
     body = [
       Expr(Assign("y", Literal 5));
       Return (Id "x")
@@ -39,12 +39,12 @@ let test1 () =
 (* Test 2: Invalid program with a type mismatch in assignment *)
 let test2 () =
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
-    formals = [(Int, "x")];
-    locals = [(Int, "y")];
+    formals = [(INT, "x")];
+    locals = [(INT, "y")];
     body = [
-      Expr(Assign("y", BoolLit true)); (* Type mismatch: assigning bool to int *)
+      Expr(Assign("y", BoolLit true)); (* Type mismatch: assigning bool to INT *)
       Return (Id "x")
     ]
   } in
@@ -53,40 +53,40 @@ let test2 () =
 (* Test 3: Valid program with a repeat loop *)
 let test3 () =
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
-    locals = [(Int, "i")];
+    locals = [(INT, "i")];
     body = [
-      Repeat(Literal 3, Block [ Expr(Assign("i", Binop(Id "i", Add, Literal 1))) ]);
+      Repeat(Literal 3, Block [ Expr(Assign("i", Binop(Id "i", ADD, Literal 1))) ]);
       Return (Literal 0)
     ]
   } in
   run_test "3: repeat loop" ([], [dummy_func])
 
-(* Test 4: Invalid program with non-integer repeat expression *)
+(* Test 4: Invalid program with non-INTeger repeat expression *)
 let test4 () =
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
     locals = [];
     body = [
-      Repeat(BoolLit true, Block []); (* Invalid: repeat requires integer *)
+      Repeat(BoolLit true, Block []); (* Invalid: repeat requires INTeger *)
       Return (Literal 0)
     ]
   } in
-  run_test "4: non-int repeat" ([], [dummy_func])
+  run_test "4: non-INT repeat" ([], [dummy_func])
 
 (* Test 5: Valid program with if-else *)
 let test5 () =
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
-    locals = [(Int, "x")];
+    locals = [(INT, "x")];
     body = [
-      If(Binop(Literal 5, Less, Literal 10),
+      If(Binop(Literal 5, LT, Literal 10),
         Expr(Assign("x", Literal 1)),
         Expr(Assign("x", Literal 0)));
       Return (Id "x")
@@ -97,10 +97,10 @@ let test5 () =
 (* Test 6: Invalid program with non-boolean if condition *)
 let test6 () =
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
-    locals = [(Int, "x")];
+    locals = [(INT, "x")];
     body = [
       If(Literal 5, (* Invalid: if condition must be boolean *)
         Expr(Assign("x", Literal 1)),
@@ -113,13 +113,13 @@ let test6 () =
 (* Test 7: Valid program with a while loop *)
 let test7 () =
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
-    locals = [(Int, "x")];
+    locals = [(INT, "x")];
     body = [
       Expr(Assign("x", Literal 0));
-      While(Binop(Id "x", Less, Literal 5), Expr(Assign("x", Binop(Id "x", Add, Literal 1))));
+      While(Binop(Id "x", LT, Literal 5), Expr(Assign("x", Binop(Id "x", ADD, Literal 1))));
       Return (Id "x")
     ]
   } in
@@ -128,12 +128,12 @@ let test7 () =
 (* Test 8: Invalid program with non-boolean while condition *)
 let test8 () =
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
-    locals = [(Int, "x")];
+    locals = [(INT, "x")];
     body = [
-      While(Literal 5, (* Invalid: while condition must be boolean *) Expr(Assign("x", Binop(Id "x", Add, Literal 1))));
+      While(Literal 5, (* Invalid: while condition must be boolean *) Expr(Assign("x", Binop(Id "x", ADD, Literal 1))));
       Return (Id "x")
     ]
   } in
@@ -143,7 +143,7 @@ let test8 () =
 let test9 () =
   let note_value = { pitch = "c"; octave = 4; length = 4 } in
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
     locals = [];
@@ -164,7 +164,7 @@ let test10 () =
   ] in
   let exprs = List.map (fun n -> Expr(NoteLit n)) notes in
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
     locals = [];
@@ -183,7 +183,7 @@ let test11 () =
   ] in
   let exprs = List.map (fun n -> Expr(NoteLit n)) notes in
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
     locals = [];
@@ -199,7 +199,7 @@ let test12 () =
   ] in
   let exprs = List.map (fun n -> Expr(NoteLit n)) notes in
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
     locals = [];
@@ -215,7 +215,7 @@ let test13 () =
   ] in
   let exprs = List.map (fun n -> Expr(NoteLit n)) notes in
   let dummy_func = {
-    rtyp = Int;
+    rtyp = INT;
     fname = "main";
     formals = [];
     locals = [];
@@ -228,7 +228,7 @@ let test13 () =
     let block_notes = [ note_value] in
     let exprs = List.map (fun n -> Expr(NoteLit n)) block_notes in
     let dummy_func = {
-      rtyp = Int;
+      rtyp = INT;
       fname = "main";
       formals = [];
       locals = [];
@@ -241,7 +241,7 @@ let test13 () =
     let block_notes = [ note_value ] in
     let exprs = List.map (fun n -> Expr(NoteLit n)) block_notes in
     let dummy_func = {
-      rtyp = Int;
+      rtyp = INT;
       fname = "main";
       formals = [];
       locals = [];

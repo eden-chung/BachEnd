@@ -30,9 +30,9 @@ let check (globals, functions) =
   (* Collect function declarations for built-in functions: no bodies *)
   let built_in_decls =
     StringMap.add "print" {
-      rtyp = Int;
+      rtyp = INT;
       fname = "print";
-      formals = [(Int, "x")];
+      formals = [(INT, "x")];
       locals = []; body = [] } StringMap.empty
   in
 
@@ -85,9 +85,9 @@ let check (globals, functions) =
 
     (* Return a semantically-checked expression, i.e., with a type *)
     let rec check_expr = function
-        Literal l -> (Int, SLiteral l)
-      | BoolLit l -> (Bool, SBoolLit l)
-      | NoteLit l -> (Note, SNoteLit l)
+        Literal l -> (INT, SLiteral l)
+      | BoolLit l -> (BOOL, SBoolLit l)
+      | NoteLit l -> (NOTE, SNoteLit l)
       | Id var -> (type_of_identifier var, SId var)
       | Assign(var, e) as ex ->
         let lt = type_of_identifier var
@@ -108,10 +108,10 @@ let check (globals, functions) =
         if t1 = t2 then
           (* Determine expression type based on operator and operand types *)
           let t = match op with
-              Add | Sub when t1 = Int -> Int
-            | Equal | Neq -> Bool
-            | Less when t1 = Int -> Bool
-            | And | Or when t1 = Bool -> Bool
+              ADD | SUB when t1 = INT -> INT
+            | EQUAL | NEQ -> BOOL
+            | LT when t1 = INT -> BOOL
+            | AND | OR when t1 = BOOL -> BOOL
             | _ -> raise (Failure err)
           in
           (t, SBinop((t1, e1'), op, (t2, e2')))
@@ -135,7 +135,7 @@ let check (globals, functions) =
     let check_bool_expr e =
       let (t, e') = check_expr e in
       match t with
-      | Bool -> (t, e')
+      | BOOL -> (t, e')
       |  _ -> raise (Failure ("expected Boolean expression in " ^ string_of_expr e))
     in
 
@@ -155,13 +155,13 @@ let check (globals, functions) =
         SWhile(check_bool_expr e, check_stmt st)
       | Repeat(e, st) ->
         let (t, e') = check_expr e in
-        if t = Int then SRepeat ((t, e'), check_stmt st)
+        if t = INT then SRepeat ((t, e'), check_stmt st)
         else raise (Failure ("repeat requires an integer expression in " ^ string_of_expr e))
       | Write(stmt_block) -> SWrite (check_stmt stmt_block)
       | Print e ->
         let (t, e') = check_expr e in
         begin match t with
-          | Int | Bool | Note -> SPrint(t, e') (* can modify this later*)
+          | INT | BOOL | NOTE -> SPrint(t, e') (* can modify this later*)
           | _ -> raise (Failure ("cannot print expression of type " ^ string_of_typ t ^ " in " ^ string_of_expr e))
         end
       | Return e ->
