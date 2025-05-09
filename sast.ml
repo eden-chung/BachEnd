@@ -1,4 +1,4 @@
-open Old_ast  (* Reuse op, typ, and note definitions *)
+open Ast  (* Reuse op, typ, and note definitions *)
 
 (* A typed expression: includes the expression's type (typ) and the expression itself (sx) *)
 type sexpr = typ * sx

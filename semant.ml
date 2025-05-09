@@ -1,6 +1,6 @@
 (* MODIFIED FROM IN CLASS CODE. *)
 
-open Old_ast
+open Ast
 open Sast
 
 module StringMap = Map.Make(String)
