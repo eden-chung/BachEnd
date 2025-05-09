@@ -103,11 +103,22 @@ let string_of_typ = function
   | NOTE -> "NOTE"
   | STRING -> "STRING"
 
+type vdecl =
+  | Vdecl     of typ * string
+  | Vinitialize of typ * string * string
+
+let string_of_vdecl = function
+  | Vdecl (t, id) ->
+      string_of_typ t ^ " " ^ id ^ "!\n"
+  | Vinitialize (t, id, init) ->
+      string_of_typ t ^ " " ^ id ^ " = " ^ init ^ "!\n"
+
+/*
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ "!\n"
 
 
 let string_of_vinitialize (t, id, initialize) = string_of_typ t ^ " " ^ id ^ "=" ^ initialize ^ "!\n"
-
+*/
 
 let string_of_fdecl fdecl =
   string_of_typ fdecl.rtyp ^ " " ^
@@ -117,8 +128,14 @@ let string_of_fdecl fdecl =
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
-
+/*
 let string_of_program (vars, funcs, initialize) =
   "\n\nParsed program: \n\n" ^
   String.concat "" (List.map string_of_vdecl vars) ^ String.concat "" (List.map string_of_vinitialize initialize) ^ "\n" ^
+  String.concat "\n" (List.map string_of_fdecl funcs)
+*/
+
+let string_of_program (vars, funcs, initialize) =
+  "\n\nParsed program: \n\n" ^
+  String.concat "" (List.map string_of_vdecl vars) ^
   String.concat "\n" (List.map string_of_fdecl funcs)
