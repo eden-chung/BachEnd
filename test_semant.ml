@@ -1,6 +1,6 @@
 (* test_semant.ml *)
 
-open Ast
+open Old_ast
 open Semant
 
 (* Helper function to run a semantic check and print results *)
