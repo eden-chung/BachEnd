@@ -1,119 +1,119 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = ADD | SUB | REPEAT | CONTINUE | BREAK | EQUAL | NEQ | LT | GT | LEQ | GEQ | AND | OR | TIMES | DIVIDE
+type OP = ADD | SUB | REPEAT | CONTINUE | BREAK | EQUAL | NEQ | LT | GT | LEQ | GEQ | AND | OR | TIMES | DIVIDE
 
-type unop = NOT
+type UNOP = NOT
 
-type typ = Int | Note | String | Bool
+type TYP = INT | NOTE | STRING | BOOL
 
-type note = {
-pitch : string;
-octave : int;
-length : int;
+type NOTE = {
+PITCH : STRING;
+OCTAVE : INT;
+LENGTH : INT;
 }
 
-type expr =
-    Literal of int
-  | BoolLit of bool
-  | StringLit of string
-  | NoteLit of note
-  | Id of string
-  | Binop of expr * op * expr
-  | Unop of unop * expr
-  | Assign of string * expr
+type EXPR =
+    LITEARL of INT
+  | BOOLLIT of BOOL
+  | STRINGLIT of STRING
+  | NOTELIT of NOTE
+  | ID of STRING
+  | BINOP of EXPR * OP * EXPR
+  | UNOP of UNOP * EXPR
+  | ASSIGN of STRING * EXPR
   (* function call *)
-  | Call of string * expr list
+  | CALL of STRING * EXPR LIST
 
-type stmt =
-    Block of stmt list
-  | Expr of expr
-  | If of expr * stmt * stmt
-  | While of expr * stmt
+type STMT =
+    BLOCK of STMT LIST
+  | EXPR of EXPR
+  | IF of EXPR * STMT * STMT
+  | WHILE of EXPR * STMT
   (* return *)
-  | For of expr * expr * expr * stmt (* for loop*)
-  | Print of expr
-  | Repeat of expr * stmt (* repeat n times loop*)
-  | Return of expr
+  | FOR of EXPR * EXPR * EXPR * STMT (* for loop*)
+  | PRINT of EXPR
+  | REPEAT of EXPR * STMT (* repeat n times loop*)
+  | RETURN of EXPR
 
 (* int x: name binding *)
-type bind = typ * string
+type BIND = TYP * STRING
 
 (* func_def: ret_typ fname formals locals body *)
-type func_def = {
-  rtyp: typ;
-  fname: string;
-  formals: bind list;
-  locals: bind list;
-  body: stmt list;
+type FUNC_DEF = {
+  RTYP: TYP;
+  FNAME: STRING;
+  FORMALS: BIND LIST;
+  LOCALS: BIND LIST;
+  BODY: STMT LIST;
 }
 
-type program = bind list * func_def list
+type PROGRAM = BIND LIST * FUNC_DEF LIST
 
 (* Pretty-printing functions *)
-let string_of_op = function
-    Add -> "+"
-  | Sub -> "-"
-  | Equal -> "=="
-  | Neq -> "!="
-  | Leq -> "<="
-  | Geq -> ">="
+let STRING_OF_OP = function
+    ADD -> "+"
+  | SUB -> "-"
+  | EQUAL -> "=="
+  | NEQ -> "!="
+  | LEQ -> "<="
+  | GEQ -> ">="
   | LT -> "<"
   | GT -> ">"
-  | Times -> "*"
-  | Divide -> "/"
-  | And -> "&&"
-  | Or -> "||"
+  | TIMES -> "*"
+  | DIVIDE -> "/"
+  | AND -> "&&"
+  | OR -> "||"
 
-let rec string_of_expr = function
-    Literal(l) -> string_of_int l
-  | BoolLit(true) -> "true"
-  | BoolLit(false) -> "false"
-  | Id(s) -> s
-  | Binop(e1, o, e2) ->
-    string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
-  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
-  | Call(f, el) ->
-      f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+let rec STRING_OF_EXPR = function
+    LITEARL(l) -> STRING_OF_INT l
+  | BOOLLIT(TRUE) -> "TRUE"
+  | BOOLLIT(FALSE) -> "FALSE"
+  | ID(S) -> S
+  | BINOP(E1, O, E2) ->
+    STRING_OF_EXPR E1 ^ " " ^ STRING_OF_OP O ^ " " ^ STRING_OF_EXPR E2
+  | ASSIGN(V, E) -> V ^ " = " ^ STRING_OF_EXPR E
+  | CALL(F, EL) ->
+      F ^ "(" ^ String.concat ", " (List.map STRING_OF_EXPR EL) ^ ")"
 
-let rec string_of_stmt = function
-    Block(stmts) ->
-    "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
-  | Expr(expr) -> string_of_expr expr ^ ";\n"
-  | Return(expr) -> "RETURN " ^ string_of_expr expr ^ "!\n"
-  | Break() -> "BREAK!\n"
-  | Continue() -> "CONTINUE!\n"
-  | If(e, s1, s2) ->  "IF (" ^ string_of_expr e ^ ")\n" ^
-                      string_of_stmt s1 ^ "ELSE\n" ^ string_of_stmt s2
-  | While(e, s) -> "WHILE (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
-  | For(x, y, z) -> "FOR (" ^ x ^ "IN " ^ string_of_expr y ^ ") " ^ string_of_stmt z
-  | Repeat(x, s) -> "REPEAT (" ^ x ^ ") " ^ string_of_stmt s
-  | Print(x) -> "PRINT (" ^ x ^ ")!"
+let rec STRING_OF_STMT = function
+    BLOCK(STMTS) ->
+    "{\n" ^ String.concat "" (List.map STRING_OF_STMT STMTS) ^ "}\n"
+  | EXPR(EXPR) -> STRING_OF_EXPR EXPR ^ ";\n"
+  | RETURN(EXPR) -> "RETURN " ^ STRING_OF_EXPR EXPR ^ "!\n"
+  | BREAK() -> "BREAK!\n"
+  | CONTINUE() -> "CONTINUE!\n"
+  | IF(E, S1, S2) ->  "IF (" ^ STRING_OF_EXPR E ^ ")\n" ^
+                      STRING_OF_STMT S1 ^ "ELSE\n" ^ STRING_OF_STMT S2
+  | WHILE(E, S) -> "WHILE (" ^ STRING_OF_EXPR E ^ ") " ^ STRING_OF_STMT S
+  | FOR(X, Y, Z) -> "FOR (" ^ X ^ "IN " ^ STRING_OF_EXPR Y ^ ") " ^ STRING_OF_STMT Z
+  | REPEAT(X, S) -> "REPEAT (" ^ X ^ ") " ^ STRING_OF_STMT S
+  | PRINT(X) -> "PRINT (" ^ X ^ ")!"
   
 
 
 
-let string_of_typ = function
-    Int -> "INT"
-  | Bool -> "BOOL"
-  | Note -> "NOTE"
-  | String -> "STRING"
+let STRING_OF_TYP = function
+    INT -> "INT"
+  | BOOL -> "BOOL"
+  | NOTE -> "NOTE"
+  | STRING -> "STRING"
 
-let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ "!\n"
-
-
-let string_of_vinitialize (t, id, initialize) = string_of_typ t ^ " " ^ id ^ "=" ^ initialize ^ "!\n"
+let STRING_OF_VDECL (T, ID) = STRING_OF_TYP T ^ " " ^ ID ^ "!\n"
 
 
-let string_of_fdecl fdecl =
-  string_of_typ fdecl.rtyp ^ " " ^
-  fdecl.fname ^ "(" ^ String.concat ", " (List.map snd fdecl.formals) ^
+let STRING_OF_VINITIALIZE (T, ID, INITIALIZE) = STRING_OF_TYP T ^ " " ^ ID ^ "=" ^ INITIALIZE ^ "!\n"
+
+
+let STRING_OF_FDECL FDECL =
+  STRING_OF_TYP FDECL.RTYP ^ " " ^
+  FDECL.FNAME ^ "(" ^ String.concat ", " (List.map snd FDECL.FORMALS) ^
   ")\n{\n" ^
-  String.concat "" (List.map string_of_vdecl fdecl.locals) ^
-  String.concat "" (List.map string_of_stmt fdecl.body) ^
+  String.concat "" (List.map STRING_OF_VDECL FDECL.LOCALS) ^
+  String.concat "" (List.map STRING_OF_STMT FDECL.BODY) ^
   "}\n"
 
 
-let string_of_program (vars, funcs) =
+let STRING_OF_PROGRAM (VARS, FUNCS) =
   "\n\nParsed program: \n\n" ^
-  String.concat "" (List.map string_of_vdecl vars) ^ String.concat "" (List.map string_of_vinitialize initialize) ^ "\n" ^
-  String.concat "\n" (List.map string_of_fdecl funcs)
+  String.concat "" (List.map STRING_OF_VDECL VARS) ^ String.concat "" (List.map STRING_OF_VINITIALIZE INITIALIZE) ^ "\n" ^
+  String.concat "\n" (List.map STRING_OF_FDECL FUNCS)
