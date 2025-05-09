@@ -48,7 +48,7 @@ type func_def = {
 type program = bind list * func_def list
 
 (* Pretty-printing functions *)
-let STRING_OF_OP = function
+let string_of_op = function
     ADD -> "+"
   | SUB -> "-"
   | EQUAL -> "=="
@@ -68,7 +68,7 @@ let STRING_OF_OP = function
    | BoolLit false -> "false"
    | Id s          -> s
    | Binop (e1, o, e2) ->
-     string_of_expr e1 ^ " " ^ STRING_OF_OP o ^ " " ^ string_of_expr e2
+     string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
    | Assign (v, e) -> v ^ " = " ^ string_of_expr e
    | Call (f, el)  ->
        f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
