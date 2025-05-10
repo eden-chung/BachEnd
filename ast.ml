@@ -17,10 +17,12 @@ type expr =
    | BoolLit   of bool
    | StringLit of string
    | NoteLit   of note
+   | NoteList  of note list
    | Id        of string
    | Binop     of expr * op * expr
    | Unop      of unop * expr
    | Assign    of string * expr
+   | TraitAssign    of string * string * expr
    | Call      of string * expr list
 
  type stmt =
@@ -77,8 +79,13 @@ let string_of_unop = function
      string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
    | Unop (u, e) -> string_of_unop u ^ " " ^ string_of_expr e
    | Assign (v, e) -> v ^ " = " ^ string_of_expr e
+   | TraitAssign (n, t, e) -> n ^ "." ^ t ^ " = " ^ string_of_expr e
    | Call (f, el)  ->
        f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+   | NoteList notes ->
+    "[" ^ String.concat " " (List.map (fun n ->
+        string_of_int n.length ^ n.pitch ^ string_of_int n.octave) notes) ^ "]"
+
 
 let rec string_of_stmt = function
     Block(stmts) ->
@@ -130,14 +137,14 @@ let string_of_fdecl fdecl =
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
-/*
+(*
 let string_of_program (vars, funcs, initialize) =
   "\n\nParsed program: \n\n" ^
   String.concat "" (List.map string_of_vdecl vars) ^ String.concat "" (List.map string_of_vinitialize initialize) ^ "\n" ^
   String.concat "\n" (List.map string_of_fdecl funcs)
-*/
+*)
 
-let string_of_program (vars, funcs, initialize) =
+let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^
   String.concat "" (List.map string_of_vdecl vars) ^
   String.concat "\n" (List.map string_of_fdecl funcs)

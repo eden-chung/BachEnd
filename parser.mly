@@ -6,7 +6,8 @@ open Ast
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE ASSIGN EXCLAMATION LBRACKET RBRACKET DOT
 %token EQUAL NEQ LT AND OR GT LEQ GEQ NOT
-%token IF ELSE WHILE INT BOOL ELSE_IF FOR IN STRING NOTE
+%token IF ELSE WHILE INT BOOL ELSE_IF FOR IN NOTE
+%token <string> STRING
 %token PLUS TIMES MINUS DIVIDE
 /* return, COMMA token */
 %token RETURN COMMA BREAK CONTINUE REPEAT
@@ -19,18 +20,6 @@ open Ast
 
 %start program
 %type <Ast.program> program
-%type <Ast.typ> typ
-%type <Ast.vdecl> vdecl
-%type <Ast.vdecl list> vdecl_list
-%type <Ast.fdecl> fdecl
-%type <Ast.expr> expr
-%type <Ast.stmt> stmt
-%type <Ast.stmt list> stmt_list
-%type <Ast.vdecl list> formals_list
-%type <Ast.vdecl list option> formals_opt
-%type <Ast.expr list> args
-%type <Ast.expr list option> args_opt
-%type <Ast.fdecl list> decls
 
 %right ASSIGN
 %left NOT
@@ -50,12 +39,12 @@ program:
 
 decls:
    /* nothing */ { ([], [])               }
- | vdecl SEMI decls { (($1 :: fst $3), snd $3) }
+ /*| vdecl EXCLAMATION decls { (($1 :: fst $3), snd $3) }*/
+ | vdecl decls { (($1 :: fst $2), snd $2) }
  | fdecl decls { (fst $2, ($1 :: snd $2)) }
-
 vdecl_list:
   /*nothing*/ { [] }
-  | vdecl SEMI vdecl_list  {  $1 :: $3 }
+  | vdecl EXCLAMATION vdecl_list  {  $1 :: $3 }
 
 /* int x */
 vdecl:
@@ -73,14 +62,14 @@ typ:
 
 /* fdecl */
 fdecl:
-  vdecl LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+  typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
   {
     {
-      rtyp=fst $1;
-      fname=snd $1;
-      formals=$3;
-      locals=$6;
-      body=$7
+      rtyp= $1;
+      fname= $2;
+      formals=$4;
+      locals=$7;
+      body=$8
     }
   }
 
@@ -105,7 +94,7 @@ stmt:
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
   | WHILE LPAREN expr RPAREN stmt           { While ($3, $5)  }
   /* return */
-  | RETURN expr SEMI                        { Return $2      }
+  | RETURN expr EXCLAMATION                        { Return $2      }
 
 expr:
     LITERAL          { Literal($1)            }
@@ -129,6 +118,11 @@ expr:
   | LPAREN expr RPAREN { $2                   }
   /* call */
   | ID LPAREN args_opt RPAREN { Call ($1, $3)  }
+  | LBRACKET note_list RBRACKET { NoteList($2)  }
+
+note_list:
+    NOTELIT                { [$1] }
+  | NOTELIT note_list       { $1 :: $2 }
 
 /* args_opt*/
 args_opt:
