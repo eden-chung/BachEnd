@@ -88,6 +88,7 @@ let check (globals, functions) =
         Literal l -> (INT, SLiteral l)
       | BoolLit l -> (BOOL, SBoolLit l)
       | NoteLit l -> (NOTE, SNoteLit l)
+      | NoteList ns  -> (NOTE, SNoteList ns)
       | Id var -> (type_of_identifier var, SId var)
       | Assign(var, e) as ex ->
         let lt = type_of_identifier var

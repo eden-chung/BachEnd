@@ -8,6 +8,7 @@ and sx =
   | SLiteral of int (* int literal *)
   | SBoolLit of bool (* boolean literal *)
   | SNoteLit of note  (* note literal *)
+  | SNoteList of note list
   | SId of string (* variable identifier *)
   | SAssign of string * sexpr (* variable assignment: string is var name, sexpr is expression *)
   | SBinop of sexpr * op * sexpr (* binary operator: left operand, operator, right operand *)
@@ -38,3 +39,89 @@ type sfunc_decl = {
 
 (* A typed program: globals + functions *)
 type sprogram = bind list * sfunc_decl list
+
+
+(* A small helper to print a note literal *)
+let string_of_note n =
+  (* e.g. "C#4/8" or "R/4" for a rest *)
+  let base = n.pitch ^
+             (if n.octave = 0 then "" else string_of_int n.octave) in
+  base ^ "/" ^ string_of_int n.length
+
+let rec string_of_sexpr ((t, e) : typ * sx) : string =
+  "(" ^ string_of_typ t ^ " : " ^
+  match e with
+  | SLiteral l       -> string_of_int l
+  | SBoolLit true    -> "true"
+  | SBoolLit false   -> "false"
+  | SNoteLit n       -> string_of_note n
+  | SNoteList notes ->
+       "[" ^ String.concat " "
+         (List.map (fun n -> string_of_note n) notes)
+       ^ "]"
+  | SId s            -> s
+  | SAssign (v, e2)  -> v ^ " = " ^ string_of_sexpr e2
+  | SBinop (e1,o,e2) ->
+      string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
+  | SCall (f, el)    ->
+      f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
+  ^ ")"
+
+let rec string_of_sstmt = function
+  | SBlock stmts ->
+      "{\n" ^
+      String.concat "" (List.map string_of_sstmt stmts) ^
+      "}\n"
+
+  | SExpr expr ->
+      string_of_sexpr expr ^ ";\n"
+
+  | SReturn expr ->
+      "return " ^ string_of_sexpr expr ^ ";\n"
+
+  | SIf (cond, then_s, else_s) ->
+      "if (" ^ string_of_sexpr cond ^ ")\n" ^
+      string_of_sstmt then_s ^
+      "else\n" ^
+      string_of_sstmt else_s
+
+  | SWhile (cond, body) ->
+      "while (" ^ string_of_sexpr cond ^ ")\n" ^
+      string_of_sstmt body
+
+  | SFor (init, cond, post, body) ->
+      "for (" ^ string_of_sexpr init ^ "; "
+             ^ string_of_sexpr cond ^ "; "
+             ^ string_of_sexpr post ^ ")\n" ^
+      string_of_sstmt body
+
+  | SPrint expr ->
+      "print(" ^ string_of_sexpr expr ^ ");\n"
+
+  | SRepeat (count, body) ->
+      "repeat (" ^ string_of_sexpr count ^ ")\n" ^
+      string_of_sstmt body
+
+  | SWrite stmt ->
+      "write " ^ 
+      (match stmt with
+       | SExpr _ | SReturn _ -> String.trim (string_of_sstmt stmt) ^ ";\n"
+       | _ -> "\n" ^ string_of_sstmt stmt)
+
+  | STranspose (expr, body) ->
+      "transpose(" ^ string_of_sexpr expr ^ ")\n" ^
+      string_of_sstmt body
+
+let string_of_sfdecl (f : sfunc_decl) : string =
+  string_of_typ f.srtyp ^ " " ^ f.sfname ^
+  "(" ^ String.concat ", " (List.map snd f.sformals) ^ ")\n" ^
+  "{\n" ^
+  String.concat "" (List.map (fun (t,v) -> string_of_typ t ^ " " ^ v ^ ";\n") f.slocals) ^
+  String.concat "" (List.map string_of_sstmt f.sbody) ^
+  "}\n"
+
+let string_of_sprogram (vars, funcs) : string =
+  "\n\nSemantically checked program:\n\n" ^
+  String.concat "" (List.map (fun (t,v) -> string_of_typ t ^ " " ^ v ^ ";\n") vars) ^
+  "\n" ^
+  String.concat "\n" (List.map string_of_sfdecl funcs)
