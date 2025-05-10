@@ -342,23 +342,10 @@ let translate (globals, functions) = (* global variables and a list of functions
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
         L.builder_at_end context end_bb
       | SRepeat (_, _) ->
-        (* don't need any LLVM code; *)
         builder
       | STranspose (_, _) ->
-        (* don't need any LLVM code; *)
         builder
-      | SWriteAttrs (title, bpm) ->
-        (* override your default header *)
-        let header =
-          Printf.sprintf
-            "\\header { title = \"%s\" }\n\
-            \\version \"2.24.2\"\n\
-            \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = %d\n"
-            title bpm
-        in
-        (* stash header someplace global, or return it specially… *)
-        (* for example, you could write it out immediately: *)
-        L.build_global_stringptr header "header" builder |> ignore;
+      | SWriteAttrs (_, _, _) ->
         builder
 
 
@@ -375,29 +362,40 @@ let translate (globals, functions) = (* global variables and a list of functions
        \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = 100\n"
     in
     let header =
-      match List.find_opt (function SWriteAttrs _ -> true | _ -> false)
+      match List.find_opt (function SWriteAttrs (_,_,_) -> true | _ -> false)
                           fdecl.sbody with
-      | Some (SWriteAttrs (title, bpm)) ->
+      | Some (SWriteAttrs (title, bpm, _body)) ->
           Printf.sprintf
             "\\header { title = \"%s\" }\n\
-             \\version \"2.24.2\"\n\
-             \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = %d\n"
+            \\version \"2.24.2\"\n\
+            \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = %d\n"
             title bpm
       | None ->
           default_header
+
     in
 
     (* 2) Generate the music tokens *)
-    let raw_body  = lilypond_of_body fdecl.sbody in
-
-    (* 3) Footer stays the same *)
-    let footer =
-      "\n  } }\n"
+        (* 2) Generate the music tokens, but only from inside the WRITE block *)
+    let raw_body =
+      match List.find_opt (function SWriteAttrs _ -> true | _ -> false) fdecl.sbody with
+      | Some (SWriteAttrs (_, _, body_sstmt)) ->
+          (* pull out the inner statements *)
+          let stmts = match body_sstmt with
+            | SBlock sl -> sl
+            | s         -> [s]
+          in
+          lilypond_of_body stmts
+      | None ->
+          (* fall back: maybe you want to allow top‐level *)
+          lilypond_of_body fdecl.sbody
     in
-
-    (* 4) Build the final LilyPond string using the computed header *)
+    (* 3) Footer stays the same *)
+    let footer = "\n  } }\n" in
+    (* 4) Build the final LilyPond string *)
     let full_score = header ^ raw_body ^ footer in
     full_score
+
 
   in
 
@@ -405,5 +403,20 @@ let translate (globals, functions) = (* global variables and a list of functions
   the_module *)
   (* returns module. is a container that stores llvm/ir code. returns a container for ir code*)
 
-  let scores = List.map build_function_body functions in
+  (* let scores = List.map build_function_body functions in *)
+  (* let write_funcs = List.filter (fun f -> f.sfname = "write") functions in
+  let scores = List.map build_function_body write_funcs in
+  String.concat "\n\n" scores *)
+
+    (* only keep those functions whose body contains a WRITE(...) block *)
+  let funcs_with_write =
+    List.filter
+      (fun f ->
+        List.exists
+          (function SWriteAttrs _ -> true | _ -> false)
+          f.sbody)
+      functions
+  in
+  let scores = List.map build_function_body funcs_with_write in
   String.concat "\n\n" scores
+

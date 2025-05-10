@@ -96,13 +96,13 @@ stmt:
   /* return */
   | RETURN expr EXCLAMATION                        { Return $2      }
   | REPEAT LPAREN expr RPAREN stmt       { Repeat($3, $5) }
-  | WRITE LPAREN NAME ASSIGN STRING COMMA TEMPO ASSIGN LITERAL RPAREN EXCLAMATION
-    { 
-      (* strip the quotes off the STRING token *)
-      let raw = $5 in                       
-      let name = String.sub raw 1 (String.length raw - 2) in 
-      WriteAttrs(name, $9) 
+  | WRITE LPAREN NAME ASSIGN STRING COMMA TEMPO ASSIGN LITERAL RPAREN stmt
+    {
+      let raw = $5 in
+      let name = String.sub raw 1 (String.length raw - 2) in
+      WriteAttrs(name, $9, $11)
     }
+
 
 expr:
     LITERAL          { Literal($1)            }

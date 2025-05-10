@@ -178,10 +178,10 @@ let check (globals, functions) =
         else raise (
             Failure ("return gives " ^ string_of_typ t ^ " expected " ^
                      string_of_typ func.rtyp ^ " in " ^ string_of_expr e))
-      | WriteAttrs (name, tempo) ->
-        (* no sub‐statement to recurse into, but you could check that
-          tempo is in a reasonable range here if you like *)
-        SWriteAttrs (name, tempo)
+      | WriteAttrs(name, tempo, body) ->
+        let checked_body = check_stmt body in
+        SWriteAttrs(name, tempo, checked_body)
+
 
     in (* body of check_func *)
     { srtyp = func.rtyp;
