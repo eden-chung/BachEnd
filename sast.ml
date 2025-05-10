@@ -21,7 +21,10 @@ type sstmt =
   | SWhile of sexpr * sstmt
   | SFor of sexpr * sexpr * sexpr * sstmt
   | SPrint of sexpr
-  | SRepeat of sexpr * sstmt
+  | SRepeat of sexpr * sstmt 
+  | SWrite of sstmt
+  | STranspose of sexpr * sstmt
+  (* return statement *)
   | SReturn of sexpr
 
 (* Typed function declaration *)

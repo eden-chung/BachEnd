@@ -34,6 +34,8 @@ type expr =
    | Print    of expr
    | Repeat   of expr * stmt               (* repeat n times *)
    | Return   of expr
+   | Transpose of expr * stmt
+   | Write of stmt
    | Continue 
    | Break    
 
@@ -63,8 +65,10 @@ let string_of_op = function
   | GT -> ">"
   | TIMES -> "*"
   | DIVIDE -> "/"
-  | AND -> "AND"
-  | OR -> "OR"
+  | AND -> "&&"
+  | OR -> "||"
+  (* | AND -> "AND" which one was it?
+  | OR -> "OR" *)
 let string_of_unop = function
   | NOT -> "NOT"
 
