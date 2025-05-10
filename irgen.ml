@@ -21,6 +21,49 @@ open Ast
 
 module StringMap = Map.Make(String)
 
+let pitch_to_lilypond pitch =
+      match String.lowercase_ascii pitch with
+      | "c"  -> "c"
+      | "c#" | "db"     -> "cis"
+      | "d"  -> "d"
+      | "d#" | "eb"     -> "dis"
+      | "e"  -> "e"
+      | "f"  -> "f"
+      | "f#" | "gb"     -> "fis"
+      | "g"  -> "g"
+      | "g#" | "ab"     -> "gis"
+      | "a"  -> "a"
+      | "a#" | "bb"     -> "ais"
+      | "b"  -> "b"
+      | "r"  -> "r"
+    
+      | "cis" -> "cis"
+      | "des" -> "des"
+      | "dis" -> "dis"
+      | "ees" -> "ees"
+      | "fis" -> "fis"
+      | "ges" -> "ges"
+      | "gis" -> "gis"
+      | "aes" -> "aes"
+      | "ais" -> "ais"
+      | "bes" -> "bes"
+    
+      | x -> failwith ("Unknown pitch: " ^ x)
+
+  let note_token note =
+  (* given an Ast.note, produce something like "c'4" or "r4" *)
+  let p = pitch_to_lilypond note.pitch in
+  let oct_suffix =
+    if note.pitch = "r" then ""
+    else if note.octave = 3 then ""
+    else if note.octave > 3 then String.make (note.octave - 3) '\''
+    else String.make (3 - note.octave) ','
+  in
+  Printf.sprintf "%s%s%d" p oct_suffix note.length
+
+let list_token notes =
+  "[" ^ String.concat " " (List.map note_token notes) ^ "]"
+
 
   let pitch_to_semitone pitch octave =
     let normalize = String.lowercase_ascii pitch in
@@ -106,85 +149,13 @@ let translate (globals, functions) = (* global variables and a list of functions
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
 
-    let pitch_to_lilypond pitch =
-      match String.lowercase_ascii pitch with
-      | "c"  -> "c"
-      | "c#" | "db"     -> "cis"
-      | "d"  -> "d"
-      | "d#" | "eb"     -> "dis"
-      | "e"  -> "e"
-      | "f"  -> "f"
-      | "f#" | "gb"     -> "fis"
-      | "g"  -> "g"
-      | "g#" | "ab"     -> "gis"
-      | "a"  -> "a"
-      | "a#" | "bb"     -> "ais"
-      | "b"  -> "b"
-      | "r"  -> "r"
-    
-      | "cis" -> "cis"
-      | "des" -> "des"
-      | "dis" -> "dis"
-      | "ees" -> "ees"
-      | "fis" -> "fis"
-      | "ges" -> "ges"
-      | "gis" -> "gis"
-      | "aes" -> "aes"
-      | "ais" -> "ais"
-      | "bes" -> "bes"
-    
-      | x -> failwith ("Unknown pitch: " ^ x)
-    in
-    
-
-    (* convert the input into lilypond *)
-    (* let lilypond_of_body stmts =
-      let rec aux acc = function
-        | [] ->
-            List.rev acc
-    
-        (* Note or rest in one go *)
-        | SExpr (_, SNoteLit note) :: rest ->
-            let token =
-              if note.pitch = "r" then
-                (* rest *)
-                Printf.sprintf "r%d" note.length
-              else
-                (* pitch *)
-                let p = pitch_to_lilypond note.pitch in
-                let oct =
-                  if note.octave = 3 then "" 
-                  else if note.octave > 3 then String.make (note.octave - 3) '\'' (*add a tick for each oct above 3*)
-                  else String.make (3 - note.octave) ','
-                in
-                Printf.sprintf "%s%s%d" p oct note.length
-            in
-            aux (token :: acc) rest
-    
-          (* repeat the notes n times*)
-        | SRepeat ((_, SLiteral count), body_stmt) :: rest ->
-            let body_stmts =
-              match body_stmt with
-              | SBlock l -> l
-              | stmt     -> [stmt]
-            in
-            let rec repeat k acc' =
-              if k = 0 then acc' else repeat (k-1) (aux acc' body_stmts)
-            in
-            aux (repeat count acc) rest
-    
-        | SRepeat _ :: _ ->
-            failwith "REPEAT count must be a literal"
-    
-        | _ :: rest ->
-            aux acc rest
-      in
-      aux [] stmts
-      |> String.concat " "    
-    in *)
-
     let lilypond_of_body stmts =
       let rec aux acc transpose_amt = function
+        | SExpr (_, SNoteList notes) :: rest ->
+          let tokens = List.map note_token notes in
+          (* prepend or append as you like; here we append in order *)
+          let acc' = List.rev_append (tokens) acc in
+          aux acc' transpose_amt rest
         | [] -> List.rev acc
         | SExpr (_, SNoteLit note) :: rest ->
             let transposed_note = transpose_note note transpose_amt in
@@ -285,6 +256,10 @@ let translate (globals, functions) = (* global variables and a list of functions
         L.build_global_stringptr lilypond_str "note_str" builder  (* optional: for now *)
        (* we can change this later but for now default octave is octave 4*)
       | SRest duration -> Printf.sprintf "%dr" duration *)
+      | SNoteList notes ->
+       (* emit a global string pointer for the whole list *)
+       let s = list_token notes in
+       L.build_global_stringptr s "notelist" builder
       | SNoteLit note ->
         (* unpack your Ast.note record *)
         let p = pitch_to_lilypond note.pitch in
