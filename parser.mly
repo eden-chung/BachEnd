@@ -6,7 +6,7 @@ open Ast
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE ASSIGN EXCLAMATION LBRACKET RBRACKET DOT
 %token EQUAL NEQ LT AND OR GT LEQ GEQ NOT
-%token IF ELSE WHILE INT BOOL ELSE_IF FOR IN NOTE WRITE
+%token IF ELSE WHILE REPEAT INT BOOL ELSE_IF FOR IN NOTE WRITE
 %token <string> STRING
 %token PLUS TIMES MINUS DIVIDE
 /* return, COMMA token */
@@ -95,6 +95,7 @@ stmt:
   | WHILE LPAREN expr RPAREN stmt           { While ($3, $5)  }
   /* return */
   | RETURN expr EXCLAMATION                        { Return $2      }
+  | REPEAT LPAREN expr RPAREN stmt       { Repeat($3, $5) }
   | WRITE LPAREN NAME ASSIGN STRING COMMA TEMPO ASSIGN LITERAL RPAREN EXCLAMATION
     { 
       (* strip the quotes off the STRING token *)
