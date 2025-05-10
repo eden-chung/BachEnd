@@ -347,6 +347,20 @@ let translate (globals, functions) = (* global variables and a list of functions
       | STranspose (_, _) ->
         (* don't need any LLVM code; *)
         builder
+      | SWriteAttrs (title, bpm) ->
+        (* override your default header *)
+        let header =
+          Printf.sprintf
+            "\\header { title = \"%s\" }\n\
+            \\version \"2.24.2\"\n\
+            \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = %d\n"
+            title bpm
+        in
+        (* stash header someplace global, or return it specially… *)
+        (* for example, you could write it out immediately: *)
+        L.build_global_stringptr header "header" builder |> ignore;
+        builder
+
 
     in
     (* Build the code for each statement in the function *)
@@ -356,24 +370,33 @@ let translate (globals, functions) = (* global variables and a list of functions
     (* add_terminal func_builder (L.build_ret (L.const_int i32_t 0)) *)
     let _ = add_terminal func_builder (L.build_ret (L.const_int i32_t 0)) in
 
-
-    (* this is all to output the lilypond output*)
-    let raw_body = lilypond_of_body fdecl.sbody in
-
-    (* hardcode the header with the staff and time signature for now*)
-    let header =
+    let default_header =
       "\\version \"2.24.2\"\n\
        \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = 100\n"
     in
+    let header =
+      match List.find_opt (function SWriteAttrs _ -> true | _ -> false)
+                          fdecl.sbody with
+      | Some (SWriteAttrs (title, bpm)) ->
+          Printf.sprintf
+            "\\header { title = \"%s\" }\n\
+             \\version \"2.24.2\"\n\
+             \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = %d\n"
+            title bpm
+      | None ->
+          default_header
+    in
 
+    (* 2) Generate the music tokens *)
+    let raw_body  = lilypond_of_body fdecl.sbody in
+
+    (* 3) Footer stays the same *)
     let footer =
       "\n  } }\n"
     in
 
-    (* append sections *)
+    (* 4) Build the final LilyPond string using the computed header *)
     let full_score = header ^ raw_body ^ footer in
-
-    (* Printf.printf "%s\n" full_score *)
     full_score
 
   in

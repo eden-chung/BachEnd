@@ -65,6 +65,7 @@ rule token = parse
     | "RETURN" {RETURN}
     | "NUMBER" {INT}
     | "BOOL" {BOOL}
+    | "WRITE" {WRITE}
     | "STRING" as lxm {STRING lxm}
     | "NOTE"   {NOTE}
     | "TRUE"   { BLIT(true)  }
@@ -73,6 +74,7 @@ rule token = parse
     | "CONTINUE" {CONTINUE}
     | "REPEAT" {REPEAT}
 
+    | "NAME" {NAME}
     | "CLEF" {CLEF}
     | "TEMPO" {TEMPO}
     | "TIMESIGNATURE" {TIMESIGNATURE}
