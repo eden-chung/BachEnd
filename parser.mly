@@ -4,25 +4,43 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN
-%token EQ NEQ LT AND OR
-%token IF ELSE WHILE INT BOOL
+%token SEMI LPAREN RPAREN LBRACE RBRACE ASSIGN EXCLAMATION LBRACKET RBRACKET DOT
+%token EQUAL NEQ LT AND OR GT LEQ GEQ NOT
+%token IF ELSE WHILE INT BOOL ELSE_IF FOR IN STRING NOTE
+%token PLUS TIMES MINUS DIVIDE
 /* return, COMMA token */
-%token RETURN COMMA
+%token RETURN COMMA BREAK CONTINUE REPEAT
+%token CLEF TEMPO TIMESIGNATURE KEYSIGNATURE TREBLE BASS
 %token <int> LITERAL
 %token <bool> BLIT
 %token <string> ID
+%token <Ast.note> NOTELIT
 %token EOF
 
 %start program
 %type <Ast.program> program
+%type <Ast.typ> typ
+%type <Ast.vdecl> vdecl
+%type <Ast.vdecl list> vdecl_list
+%type <Ast.fdecl> fdecl
+%type <Ast.expr> expr
+%type <Ast.stmt> stmt
+%type <Ast.stmt list> stmt_list
+%type <Ast.vdecl list> formals_list
+%type <Ast.vdecl list option> formals_opt
+%type <Ast.expr list> args
+%type <Ast.expr list option> args_opt
+%type <Ast.fdecl list> decls
 
 %right ASSIGN
+%left NOT
 %left OR
 %left AND
-%left EQ NEQ
-%left LT
+%left EQUAL NEQ LEQ GEQ
+%left LT GT
+%left TIMES DIVIDE
 %left PLUS MINUS
+
 
 %%
 
@@ -41,11 +59,17 @@ vdecl_list:
 
 /* int x */
 vdecl:
-  typ ID { ($1, $2) }
+  typ ID EXCLAMATION                                    { ($1, $2) }
+  /*
+  | typ ID ASSIGN STRING_LITERAL            { Vinitialize($1, $2, $4) }
+  */
+
 
 typ:
-    INT   { Int   }
-  | BOOL  { Bool  }
+    INT   { INT   }
+  | BOOL  { BOOL  }
+  | NOTE  { NOTE  }
+  | STRING  { STRING  }
 
 /* fdecl */
 fdecl:
@@ -74,7 +98,7 @@ stmt_list:
   | stmt stmt_list  { $1::$2 }
 
 stmt:
-    expr SEMI                               { Expr $1      }
+    expr EXCLAMATION                               { Expr $1      }
   | LBRACE stmt_list RBRACE                 { Block $2 }
   /* if (condition) { block1} else {block2} */
   /* if (condition) stmt else stmt */
@@ -86,14 +110,21 @@ stmt:
 expr:
     LITERAL          { Literal($1)            }
   | BLIT             { BoolLit($1)            }
+  | NOTELIT          { NoteLit($1)            }
   | ID               { Id($1)                 }
-  | expr PLUS   expr { Binop($1, Add,   $3)   }
-  | expr MINUS  expr { Binop($1, Sub,   $3)   }
-  | expr EQ     expr { Binop($1, Equal, $3)   }
-  | expr NEQ    expr { Binop($1, Neq, $3)     }
-  | expr LT     expr { Binop($1, Less,  $3)   }
-  | expr AND    expr { Binop($1, And,   $3)   }
-  | expr OR     expr { Binop($1, Or,    $3)   }
+  | expr PLUS   expr { Binop($1, ADD,   $3)   }
+  | expr MINUS  expr { Binop($1, SUB,   $3)   }
+  | expr TIMES  expr { Binop($1, TIMES,   $3)   }
+  | expr DIVIDE  expr { Binop($1, DIVIDE,   $3)   }
+  | expr EQUAL     expr { Binop($1, EQUAL, $3)   }
+  | expr NEQ    expr { Binop($1, NEQ, $3)     }
+  | expr LEQ    expr { Binop($1, LEQ, $3)     }
+  | expr GEQ    expr { Binop($1, GEQ, $3)     }
+  | expr LT     expr { Binop($1, LT,  $3)   }
+  | expr GT     expr { Binop($1, GT,  $3)   }
+  | expr AND    expr { Binop($1, AND,   $3)   }
+  | expr OR     expr { Binop($1, OR,    $3)   }
+  | NOT expr         { Unop(NOT, $2)          }
   | ID ASSIGN expr   { Assign($1, $3)         }
   | LPAREN expr RPAREN { $2                   }
   /* call */
