@@ -1,0 +1,15 @@
+\version "2.24.2"
+
+\score {
+  \new Staff {
+    \clef treble
+    \time 4/4
+    \tempo 4 = 100
+
+      % Section 1: Twinkle Twinkle Duet
+      c'4 c' g' g' a' a'
+      g''2
+      f'4 f' e' e' d' d'
+      c'2
+  }
+}
