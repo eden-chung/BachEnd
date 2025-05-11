@@ -152,8 +152,14 @@ let translate (globals, functions) = (* global variables and a list of functions
     let lilypond_of_body stmts =
       let rec aux acc transpose_amt = function
         | SExpr (_, SNoteList notes) :: rest ->
-            let tokens = List.map note_token notes in
-            aux (acc @ tokens) transpose_amt rest
+          let tokens =
+            notes
+            |> List.map (fun note ->
+                let n' = transpose_note note transpose_amt in
+                note_token n'
+              )
+          in
+          aux (acc @ tokens) transpose_amt rest
         | SExpr (_, SNoteLit note) :: rest ->
             let note' = transpose_note note transpose_amt in
             let token = note_token note' in

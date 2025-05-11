@@ -73,7 +73,7 @@ rule token = parse
     | "BREAK" {BREAK}
     | "CONTINUE" {CONTINUE}
     | "REPEAT" {REPEAT}
-
+    | "TRANSPOSE" {TRANSPOSE}
     | "NAME" {NAME}
     | "CLEF" {CLEF}
     | "TEMPO" {TEMPO}
