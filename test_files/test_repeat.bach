@@ -1,0 +1,9 @@
+NUMBER main () {
+  WRITE(NAME="test", TEMPO=80)!
+REPEAT(5) {        
+[2C 4B3 G7]!
+}
+
+
+}
+
