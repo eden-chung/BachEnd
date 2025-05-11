@@ -152,52 +152,27 @@ let translate (globals, functions) = (* global variables and a list of functions
     let lilypond_of_body stmts =
       let rec aux acc transpose_amt = function
         | SExpr (_, SNoteList notes) :: rest ->
-          let tokens = List.map note_token notes in
-          (* prepend or append as you like; here we append in order *)
-          let acc' = List.rev_append (tokens) acc in
-          aux acc' transpose_amt rest
-        | [] -> List.rev acc
+            let tokens = List.map note_token notes in
+            aux (acc @ tokens) transpose_amt rest
         | SExpr (_, SNoteLit note) :: rest ->
-            let transposed_note = transpose_note note transpose_amt in
-            let token =
-              if transposed_note.pitch = "r" then
-                Printf.sprintf "r%d" transposed_note.length
-              else
-                let p = pitch_to_lilypond transposed_note.pitch in
-                let oct =
-                  if transposed_note.octave = 3 then ""
-                  else if transposed_note.octave > 3 then String.make (transposed_note.octave - 3) '\''
-                  else String.make (3 - transposed_note.octave) ','
-                in
-                Printf.sprintf "%s%s%d" p oct transposed_note.length
-            in
-            aux (token :: acc) transpose_amt rest
-    
+            let note' = transpose_note note transpose_amt in
+            let token = note_token note' in
+            aux (acc @ [token]) transpose_amt rest
         | SRepeat ((_, SLiteral count), body_stmt) :: rest ->
             let body_stmts = match body_stmt with SBlock l -> l | stmt -> [stmt] in
-            let rec repeat k acc' =
-              if k = 0 then acc'
-              else repeat (k-1) (aux acc' transpose_amt body_stmts)
-            in
-            aux (repeat count acc) transpose_amt rest
-    
-        (* | STranspose ((_, SLiteral n), stmt) :: rest ->
-          let inner_stmts = match stmt with SBlock l -> l | s -> [s] in
-          let acc' = aux acc (transpose_amt + n) inner_stmts in
-          aux acc' transpose_amt rest *)
-
-          | STranspose ((_, SLiteral n), stmt) :: rest ->
-            let inner_stmts = match stmt with SBlock l -> l | s -> [s] in
-            let tokens = aux [] (transpose_amt + n) inner_stmts in
-            let acc' = List.rev_append tokens acc in
-            aux acc' transpose_amt rest
-        
-      
-    
-        | _ :: rest -> aux acc transpose_amt rest
+            let nested = aux [] transpose_amt body_stmts in
+            let rec repeat n acc' = if n <= 0 then acc' else repeat (n-1) (acc' @ nested) in
+            aux (acc @ repeat count []) transpose_amt rest
+        | STranspose ((_, SLiteral n), body_stmt) :: rest ->
+            let body_stmts = match body_stmt with SBlock l -> l | stmt -> [stmt] in
+            let nested = aux [] (transpose_amt + n) body_stmts in
+            aux (acc @ nested) transpose_amt rest
+        | _ :: rest ->
+            aux acc transpose_amt rest
+        | [] ->
+            acc
       in
-      aux [] 0 stmts
-      |> String.concat " "
+      aux [] 0 stmts |> String.concat " "
     in
   
 
@@ -376,7 +351,6 @@ let translate (globals, functions) = (* global variables and a list of functions
     in
 
     (* 2) Generate the music tokens *)
-        (* 2) Generate the music tokens, but only from inside the WRITE block *)
     let raw_body =
       match List.find_opt (function SWriteAttrs _ -> true | _ -> false) fdecl.sbody with
       | Some (SWriteAttrs (_, _, body_sstmt)) ->
@@ -387,26 +361,17 @@ let translate (globals, functions) = (* global variables and a list of functions
           in
           lilypond_of_body stmts
       | None ->
-          (* fall back: maybe you want to allow top‐level *)
           lilypond_of_body fdecl.sbody
     in
-    (* 3) Footer stays the same *)
+
     let footer = "\n  } }\n" in
-    (* 4) Build the final LilyPond string *)
+
+    (* final lilypond string*)
     let full_score = header ^ raw_body ^ footer in
     full_score
 
 
   in
-
-  (* List.iter build_function_body functions;
-  the_module *)
-  (* returns module. is a container that stores llvm/ir code. returns a container for ir code*)
-
-  (* let scores = List.map build_function_body functions in *)
-  (* let write_funcs = List.filter (fun f -> f.sfname = "write") functions in
-  let scores = List.map build_function_body write_funcs in
-  String.concat "\n\n" scores *)
 
     (* only keep those functions whose body contains a WRITE(...) block *)
   let funcs_with_write =
