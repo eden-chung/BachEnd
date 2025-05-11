@@ -6,20 +6,42 @@ opam install llvm
 ```
 
 
-TESTING semant.ml: 
-```
-ocamlbuild test_semant.native
-./test_semant.native
-```
+# Usage
 
 Compile project
 ```
 ocamlbuild -use-ocamlfind -pkgs llvm bachend.native
 ```
 
+To compile bachend code into a PDF, run
 ```
-./bachend.native -l example.bach > example.out
+./bachend.native <filename.bach>
 ```
+
+For example,
+```
+./bachend.native final_tests/example1.bach
+```
+
+This will generate a PDF called output.pdf. If the user wants to specify the name of the PDF, instead of the command above, run
+
+```
+./bachend.native -o <output_filename> final_tests/example1.bach
+```
+
+For example, to generate a PDF file called twinkle.pdf, run
+```
+./bachend.native -o twinkle final_tests/example1.bach
+```
+
+# To delete later
+
+TESTING semant.ml: 
+```
+ocamlbuild test_semant.native
+./test_semant.native
+```
+
 
 Run lilypond on the output
 ```
@@ -32,5 +54,3 @@ This will produce a .pdf file containing the sheet music specified
 
 TODOs for IRGen
 - SFor
-
-Transpose needs to be added to scanner and parser

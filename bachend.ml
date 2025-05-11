@@ -1,40 +1,47 @@
-(* Top-level of the MicroC compiler: scan & parse the input,
-   check the resulting AST and generate an SAST from it, generate LLVM IR,
-   and dump the module *)
+open Sast
+open Irgen
+open Lexing
+open Printf
+open Sys
 
-type action = Ast | Sast | LLVM_IR
+let usage = "Usage: test_all.native [-o basename] [file.bach]\n\
+             If no file is given, reads from stdin.\n\
+             -o basename\tset output basename (default \"output\")."
 
 let () =
-  let action = ref LLVM_IR in
-  let set_action a () = action := a in
+  let out_base = ref "output" in
   let speclist = [
-    ("-a", Arg.Unit (set_action Ast), "Print the AST");
-    ("-s", Arg.Unit (set_action Sast), "Print the SAST");
-    ("-l", Arg.Unit (set_action LLVM_IR), "Print the generated LLVM IR");
+    ("-o", Arg.String (fun s -> out_base := s),
+            "basename for .ly/.pdf (default \"output\")");
   ] in
-  let usage_msg = "usage: ./bachend.native [-a|-s|-l] [file.mc]" in
-  let channel = ref stdin in
-  Arg.parse speclist (fun filename -> channel := open_in filename) usage_msg;
+  let filenames = ref [] in
 
-  let lexbuf = Lexing.from_channel !channel in
+  Arg.parse speclist (fun f -> filenames := f :: !filenames) usage;
+  let in_chan =
+    match List.rev !filenames with
+    | []    -> stdin
+    | [fn]  -> open_in fn
+    | _     -> eprintf "%s\n" usage; exit 1
+  in
 
-  let ast = Parser.program_rule Scanner.token lexbuf in
-  match !action with
-    Ast -> print_string (Ast.string_of_program ast)
-  | _ -> let sast = Semant.check ast in
-    match !action with
-      Ast     -> ()
-    | Sast    -> print_string (Sast.string_of_sprogram sast)
-    (* | LLVM_IR -> print_string (Llvm.string_of_llmodule (Irgen.translate sast)) *)
-    (*| LLVM_IR -> ignore (translate sast) *) (* since we don't want to print LLVM code, just the bachend notes*)
-    | LLVM_IR ->
-      let lilypond_code = Irgen.translate sast in
-      let output_file = "output.ly" in
-      let oc = open_out output_file in
-      output_string oc lilypond_code;
-      close_out oc;
-      (* now invoke lilypond *)
-      let cmd = Printf.sprintf "lilypond -o output %s" output_file in
-      let _ = Sys.command cmd in
-      ()
-  
+  let lexbuf   = Lexing.from_channel in_chan in
+  let program  = Parser.program Scanner.token lexbuf in
+  let sprogram = Semant.check program in
+
+  (* print_endline (string_of_sprogram sprogram); *)
+
+  let lilypond_code = translate sprogram in
+
+  let ly_file = !out_base ^ ".ly" in
+  let oc = open_out ly_file in
+  output_string oc lilypond_code;
+  close_out oc;
+  printf "Written to: %s\n%!" ly_file;
+
+  let cmd = sprintf "lilypond -o %s %s" !out_base ly_file in
+  match Sys.command cmd with
+  | 0 ->
+      printf "Geenerated %s.pdf\n%!" !out_base
+  | code ->
+      eprintf "lilypond failed (exit %d)\n%!" code;
+      exit code
