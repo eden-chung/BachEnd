@@ -25,7 +25,7 @@ type sstmt =
   | SRepeat of sexpr * sstmt 
   | SWrite of sstmt
   | STranspose of sexpr * sstmt
-  | SWriteAttrs of string * int
+  | SWriteAttrs of string * int * sstmt
   (* return statement *)
   | SReturn of sexpr
 
@@ -109,8 +109,12 @@ let rec string_of_sstmt = function
        | SExpr _ | SReturn _ -> String.trim (string_of_sstmt stmt) ^ ";\n"
        | _ -> "\n" ^ string_of_sstmt stmt) *)
 
-  | SWriteAttrs (name, tempo) ->
-      Printf.sprintf "WRITE(NAME=\"%s\", TEMPO=%d)!\n" name tempo
+  | SWriteAttrs(name, tempo, body) ->
+    Printf.sprintf
+      "WRITE(NAME=\"%s\", TEMPO=%d) %s\n"
+      name tempo
+      (string_of_sstmt body)
+
 
   | STranspose (expr, body) ->
       "transpose(" ^ string_of_sexpr expr ^ ")\n" ^

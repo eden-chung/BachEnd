@@ -36,7 +36,7 @@ type expr =
    | Return   of expr
    | Transpose of expr * stmt
    | Write of stmt
-   | WriteAttrs of string * int
+   | WriteAttrs of string * int * stmt
    | Continue 
    | Break    
 
@@ -105,10 +105,12 @@ let rec string_of_stmt = function
   | For(x, y, z) -> "FOR (" ^ x ^ "IN " ^ string_of_expr y ^ ") " ^ string_of_stmt z
   | Repeat(x, s) -> "REPEAT (" ^string_of_expr x ^ ") " ^ string_of_stmt s
   | Print(x) -> "PRINT (" ^ string_of_expr x ^ ")!"
-  | WriteAttrs(name, tempo) ->
-      Printf.sprintf
-        "WRITE(NAME=\"%s\", TEMPO=%d)!\n"
-        name tempo
+  | WriteAttrs(name, tempo, body) ->
+    Printf.sprintf
+      "WRITE(NAME=\"%s\", TEMPO=%d) %s"
+      name tempo
+      (string_of_stmt body)
+
 
   
 
