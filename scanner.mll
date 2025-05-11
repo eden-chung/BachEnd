@@ -9,7 +9,8 @@ let alpha_lower = ['a'-'z']
 let id = alpha_lower alphanumeric+ (* must be at least 2 characters long*)
 
 let INT = '-'? ('0' | (['1'-'9'] digit*))
-let string_body = ['a'-'z' 'A'-'Z' '0'-'9']*
+(* let string_body = ['a'-'z' 'A'-'Z' '0'-'9']* *)
+let string_body = [^ '"' ]* (* allow strings to have spaces in them *)
 let STRING = '"' string_body '"'
 
 (*
@@ -129,7 +130,8 @@ rule token = parse
         let n = { Ast.pitch; octave; length } in
         NOTELIT n
     }
-    | STRING as lxm { STRING lxm }
+    (* | STRING as lxm { STRING lxm } *)
+    | '"' string_body '"' as lxm { STRING lxm} (* allow strings to have spaces *)
     | INT as lxm {LITERAL (int_of_string lxm)}
     | id as lxm {ID lxm}
     | eof {EOF}

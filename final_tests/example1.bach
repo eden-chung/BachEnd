@@ -1,9 +1,10 @@
-song1 = WRITE() {
-    //twinkle twinkle duet
-    [4(C C G G A A) 2G
-    4(F F E E D D) 2D]!
+NUMBER main () {
+    WRITE(NAME="Twinkle Twinkle", TEMPO=100) {
+        [4C 4C 4G 4G 4A 4A 2G]!
+        [4F 4F 4E 4E 4D 4D 2D]!
 
-    REPEAT(5) {
-        [4(C C C C)]!
+        REPEAT(5) {
+            [C]!
+        }
     }
 }

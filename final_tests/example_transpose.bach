@@ -1,6 +1,7 @@
 NUMBER main () {
-    WRITE(NAME="test", TEMPO=80) {
-        TRANSPOSE(1) {        
+    WRITE(NAME="Transpose Song", TEMPO=80) {
+        TRANSPOSE(2) {  
+            [A]!      
             [C D E]!
         }
     }
