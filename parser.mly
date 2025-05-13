@@ -97,12 +97,44 @@ stmt:
   | RETURN expr EXCLAMATION                        { Return $2      }
   | REPEAT LPAREN expr RPAREN stmt       { Repeat($3, $5) }
   | TRANSPOSE LPAREN expr RPAREN stmt       { Transpose($3, $5) }
-  | WRITE LPAREN NAME ASSIGN STRING COMMA TEMPO ASSIGN LITERAL RPAREN stmt
+  | WRITE LPAREN NAME ASSIGN STRING COMMA TEMPO ASSIGN LITERAL write_optional_args RPAREN stmt
     {
       let raw = $5 in
       let name = String.sub raw 1 (String.length raw - 2) in
-      WriteAttrs(name, $9, $11)
+      let (clef_opt, ts_opt, ks_opt) = $10 in
+      WriteAttrs {
+        name = name;
+        tempo = $9;
+        clef = clef_opt;
+        timesig = ts_opt;
+        keysig = ks_opt;
+        body = $12;
+      }
     }
+
+write_optional_args:
+    /* no extra args */ { (None, None, None) }
+
+  | COMMA CLEF ASSIGN clef_val write_optional_args {
+      let (clef, ts, ks) = $5 in
+      (Some $4, ts, ks)
+    }
+
+  | COMMA TIMESIGNATURE ASSIGN LPAREN LITERAL COMMA LITERAL RPAREN write_optional_args {
+      let (clef, ts, ks) = $9 in
+      (clef, Some ($5, $7), ks)
+    }
+
+  | COMMA KEYSIGNATURE ASSIGN STRING write_optional_args {
+      let raw = $4 in
+      let key = String.sub raw 1 (String.length raw - 2) in
+      let (clef, ts, _) = $5 in
+      (clef, ts, Some key)
+    }
+    
+clef_val:
+    TREBLE { "treble" }
+  | BASS { "bass" }
 
 
 expr:

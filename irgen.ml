@@ -52,9 +52,9 @@ let pitch_to_lilypond pitch =
 
   let note_token note =
   (* given an Ast.note, produce something like "c'4" or "r4" *)
-  let p = pitch_to_lilypond note.pitch in
+  let p = pitch_to_lilypond (String.lowercase_ascii note.pitch) in
   let oct_suffix =
-    if note.pitch = "r" then ""
+    if String.lowercase_ascii note.pitch = "r" then ""
     else if note.octave = 3 then ""
     else if note.octave > 3 then String.make (note.octave - 3) '\''
     else String.make (3 - note.octave) ','
@@ -98,7 +98,7 @@ let semitone_to_pitch semitone =
   (all_pitches.(pitch_class), octave)
 
 let transpose_note note semitone_shift =
-  if note.pitch = "r" then note
+  if String.lowercase_ascii note.pitch = "r" then note
   else
     let original = pitch_to_semitone note.pitch note.octave in
     let shifted = original + semitone_shift in
@@ -246,7 +246,7 @@ let translate (globals, functions) = (* global variables and a list of functions
         let p = pitch_to_lilypond note.pitch in
         let dur = note.length in
         let oct_suffix =
-          if note.pitch = "r" then ""
+          if String.lowercase_ascii note.pitch = "r" then ""
           else if note.octave = 3 then "'"
           else if note.octave > 3 then String.make (note.octave - 3) '\''
           else String.make (3 - note.octave) ','
@@ -326,7 +326,7 @@ let translate (globals, functions) = (* global variables and a list of functions
         builder
       | STranspose (_, _) ->
         builder
-      | SWriteAttrs (_, _, _) ->
+      | SWriteAttrs { name; tempo; clef; timesig; keysig; body } ->
         builder
 
 
@@ -343,23 +343,23 @@ let translate (globals, functions) = (* global variables and a list of functions
        \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = 100\n"
     in
     let header =
-      match List.find_opt (function SWriteAttrs (_,_,_) -> true | _ -> false)
-                          fdecl.sbody with
-      | Some (SWriteAttrs (title, bpm, _body)) ->
-          Printf.sprintf
-            "\\header { title = \"%s\" }\n\
-            \\version \"2.24.2\"\n\
-            \\score { \\new Staff { \\clef treble \\time 4/4 \\tempo 4 = %d\n"
-            title bpm
-      | None ->
-          default_header
+      match List.find_opt (function SWriteAttrs _ -> true | _ -> false) fdecl.sbody with
+      | Some (SWriteAttrs { name; tempo; clef; timesig; keysig; _ }) ->
+          let clef_str = match clef with Some c -> "\\clef " ^ String.lowercase_ascii c ^ "\n" | None -> "" in
+          let ts_str = match timesig with Some (a,b) -> Printf.sprintf "\\time %d/%d\n" a b | None -> "" in
+          let key_str = match keysig with Some k -> Printf.sprintf "\\key %s \\major\n" (String.lowercase_ascii k) | None -> "" in
+          Printf.sprintf "\\header { title = \"%s\" }\n\\version \"2.24.2\"\n\\score { \\new Staff {\n%s%s%s\\tempo 4 = %d\n"
+            name clef_str ts_str key_str tempo
+      | _ -> default_header
+
+      
 
     in
 
     (* 2) Generate the music tokens *)
     let raw_body =
       match List.find_opt (function SWriteAttrs _ -> true | _ -> false) fdecl.sbody with
-      | Some (SWriteAttrs (_, _, body_sstmt)) ->
+      | Some (SWriteAttrs { body = body_sstmt; _ }) ->
           (* pull out the inner statements *)
           let stmts = match body_sstmt with
             | SBlock sl -> sl

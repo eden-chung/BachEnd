@@ -178,9 +178,10 @@ let check (globals, functions) =
         else raise (
             Failure ("return gives " ^ string_of_typ t ^ " expected " ^
                      string_of_typ func.rtyp ^ " in " ^ string_of_expr e))
-      | WriteAttrs(name, tempo, body) ->
+      | WriteAttrs({ name; tempo; clef; timesig; keysig; body }) ->
         let checked_body = check_stmt body in
-        SWriteAttrs(name, tempo, checked_body)
+        SWriteAttrs({ name; tempo; clef; timesig; keysig; body = checked_body })
+
 
 
     in (* body of check_func *)

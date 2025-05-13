@@ -25,7 +25,14 @@ type sstmt =
   | SRepeat of sexpr * sstmt 
   | SWrite of sstmt
   | STranspose of sexpr * sstmt
-  | SWriteAttrs of string * int * sstmt
+  | SWriteAttrs of {
+    name : string;
+    tempo : int;
+    clef : string option;
+    timesig : (int * int) option;
+    keysig : string option;
+    body : sstmt;
+  }
   (* return statement *)
   | SReturn of sexpr
 
@@ -45,9 +52,12 @@ type sprogram = bind list * sfunc_decl list
 (* A small helper to print a note literal *)
 let string_of_note n =
   (* e.g. "C#4/8" or "R/4" for a rest *)
-  let base = n.pitch ^
-             (if n.octave = 0 then "" else string_of_int n.octave) in
-  base ^ "/" ^ string_of_int n.length
+  if String.lowercase_ascii n.pitch = "r" then
+    "R/" ^ string_of_int n.length
+  else
+    let base = n.pitch ^
+              (if n.octave = 0 then "" else string_of_int n.octave) in
+    base ^ "/" ^ string_of_int n.length
 
 let rec string_of_sexpr ((t, e) : typ * sx) : string =
   "(" ^ string_of_typ t ^ " : " ^
@@ -109,11 +119,15 @@ let rec string_of_sstmt = function
        | SExpr _ | SReturn _ -> String.trim (string_of_sstmt stmt) ^ ";\n"
        | _ -> "\n" ^ string_of_sstmt stmt) *)
 
-  | SWriteAttrs(name, tempo, body) ->
-    Printf.sprintf
-      "WRITE(NAME=\"%s\", TEMPO=%d) %s\n"
-      name tempo
-      (string_of_sstmt body)
+  | SWriteAttrs({ name; tempo; clef; timesig; keysig; body }) ->
+    let meta =
+      Printf.sprintf "NAME=\"%s\", TEMPO=%d" name tempo ^
+      (match clef with Some c -> ", CLEF=" ^ c | None -> "") ^
+      (match timesig with Some (a,b) -> Printf.sprintf ", TIMESIGNATURE=(%d,%d)" a b | None -> "") ^
+      (match keysig with Some k -> ", KEYSIGNATURE=\"" ^ k ^ "\"" | None -> "")
+    in
+    "WRITE(" ^ meta ^ ") " ^ string_of_sstmt body
+
 
 
   | STranspose (expr, body) ->

@@ -36,7 +36,14 @@ type expr =
    | Return   of expr
    | Transpose of expr * stmt
    | Write of stmt
-   | WriteAttrs of string * int * stmt
+   | WriteAttrs of {
+    name : string;
+    tempo : int;
+    clef : string option;
+    timesig : (int * int) option;
+    keysig : string option;
+    body : stmt;
+  }
    | Continue 
    | Break    
 
@@ -105,16 +112,14 @@ let rec string_of_stmt = function
   | For(x, y, z) -> "FOR (" ^ x ^ "IN " ^ string_of_expr y ^ ") " ^ string_of_stmt z
   | Repeat(x, s) -> "REPEAT (" ^string_of_expr x ^ ") " ^ string_of_stmt s
   | Print(x) -> "PRINT (" ^ string_of_expr x ^ ")!"
-  | WriteAttrs(name, tempo, body) ->
-    Printf.sprintf
-      "WRITE(NAME=\"%s\", TEMPO=%d) %s"
-      name tempo
-      (string_of_stmt body)
-
-
-  
-
-
+  | WriteAttrs { name; tempo; clef; timesig; keysig; body } ->
+    let meta =
+      Printf.sprintf "NAME=\"%s\", TEMPO=%d" name tempo ^
+      (match clef with Some c -> ", CLEF=" ^ c | None -> "") ^
+      (match timesig with Some (a, b) -> Printf.sprintf ", TIMESIGNATURE=(%d,%d)" a b | None -> "") ^
+      (match keysig with Some k -> ", KEYSIGNATURE=\"" ^ k ^ "\"" | None -> "")
+    in
+    "WRITE(" ^ meta ^ ") " ^ string_of_stmt body
 
 let string_of_typ = function
     INT -> "INT"
