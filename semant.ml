@@ -88,7 +88,8 @@ let check (globals, functions) =
         Literal l -> (INT, SLiteral l)
       | BoolLit l -> (BOOL, SBoolLit l)
       | NoteLit l -> (NOTE, SNoteLit l)
-      | NoteList ns  -> (NOTE, SNoteList ns)
+      (* | NoteList ns  -> (NOTE, SNoteList ns) *)
+      | NoteList nss  -> (NOTE, SNoteList nss)
       | ChordLit ns ->
         (NOTE, SChordLit ns)
       | Id var -> (type_of_identifier var, SId var)

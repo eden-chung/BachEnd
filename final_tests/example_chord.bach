@@ -6,6 +6,6 @@ NUMBER main () {
     TIMESIGNATURE=(4,4),
     KEYSIGNATURE="C"
   ) {
-    [C E C_E_G]!
+    [C E 2C_E_G]!
   }
 }

@@ -164,8 +164,14 @@ expr:
   | LBRACKET note_list RBRACKET { NoteList($2)  }
 
 note_list:
-    NOTELIT                { [$1] }
-  | NOTELIT note_list       { $1 :: $2 }
+  //   NOTELIT                { [$1] }
+  // | CHORDLIT               { $1}
+  // | NOTELIT note_list       { $1 :: $2 }
+  // | CHORDLIT note_list     { $1 @ $2 }
+   NOTELIT                { [[ $1 ]]                }  
+  | CHORDLIT               { [ $1 ]                  } 
+  | NOTELIT note_list      { [ $1 ] :: $2            } 
+  | CHORDLIT note_list     { $1      :: $2            }
 
 /* args_opt*/
 args_opt:

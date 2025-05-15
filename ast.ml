@@ -17,7 +17,8 @@ type expr =
    | BoolLit   of bool
    | StringLit of string
    | NoteLit   of note
-   | NoteList  of note list
+   (* | NoteList  of note list *)
+   | NoteList  of note list list
    | ChordLit  of note list
    | Id        of string
    | Binop     of expr * op * expr
@@ -81,7 +82,7 @@ let string_of_op = function
 let string_of_unop = function
   | NOT -> "NOT"
 
- let rec string_of_expr = function
+let rec string_of_expr = function
      Literal l      -> string_of_int l
    | BoolLit true  -> "TRUE"
    | BoolLit false -> "FALSE"
@@ -95,9 +96,34 @@ let string_of_unop = function
    | TraitAssign (n, t, e) -> n ^ "." ^ t ^ " = " ^ string_of_expr e
    | Call (f, el)  ->
        f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-   | NoteList notes ->
-    "[" ^ String.concat " " (List.map (fun n ->
-        string_of_int n.length ^ n.pitch ^ string_of_int n.octave) notes) ^ "]"
+   | NoteList groups ->
+    "["
+    ^ String.concat " "
+        (List.map
+           (fun notes ->
+             if List.length notes = 1 then
+               (* single note group *)
+               let n = List.hd notes in
+               string_of_int n.length ^ n.pitch ^ string_of_int n.octave
+             else
+               (* chord group *)
+               "<"
+               ^ String.concat " "
+                   (List.map (fun n ->
+                        string_of_int n.length ^ n.pitch ^ string_of_int n.octave
+                     ) notes)
+               ^ ">"
+           )
+           groups
+        )
+    ^ "]"
+  | ChordLit notes ->
+    "<"
+    ^ String.concat " "
+        (List.map (fun n ->
+             string_of_int n.length ^ n.pitch ^ string_of_int n.octave
+         ) notes)
+    ^ ">"
 
 
 let rec string_of_stmt = function

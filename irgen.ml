@@ -151,40 +151,71 @@ let translate (globals, functions) = (* global variables and a list of functions
 
     let lilypond_of_body stmts =
       let rec aux acc transpose_amt = function
+        (* 1) Chord groups: strip per-note lengths, grab one length for the whole chord *)
         | SExpr (_, SChordLit notes) :: rest ->
-          let tokens = 
-            notes 
-            |> List.map (fun note -> note_token (transpose_note note transpose_amt))
-            |> String.concat " "
-          in
-          (* angle-brackets tell LilyPond “play together” *)
-          aux (acc @ ["<" ^ tokens ^ ">"]) transpose_amt rest
-        | SExpr (_, SNoteList notes) :: rest ->
-          let tokens =
-            notes
-            |> List.map (fun note ->
-                let n' = transpose_note note transpose_amt in
-                note_token n'
-              )
-          in
-          aux (acc @ tokens) transpose_amt rest
+            let len = (List.hd notes).length in
+            let pitches =
+              notes
+              |> List.map (fun n ->
+                  let n' = transpose_note n transpose_amt in
+                  let base = pitch_to_lilypond (String.lowercase_ascii n'.pitch) in
+                  let oct_suf =
+                    if String.lowercase_ascii n'.pitch = "r" then ""
+                    else if n'.octave = 3 then ""
+                    else if n'.octave > 3 then String.make (n'.octave - 3) '\''
+                    else String.make (3 - n'.octave) ','
+                  in
+                  base ^ oct_suf
+                )
+            in
+            let chord_token = "<" ^ String.concat " " pitches ^ ">" ^ string_of_int len in
+            aux (acc @ [chord_token]) transpose_amt rest
+
+        | SExpr (_, SNoteList groups) :: rest ->
+            let tokens =
+              groups
+              |> List.map (fun notes ->
+                  if List.length notes = 1 then
+                    (* single note *)
+                    note_token (transpose_note (List.hd notes) transpose_amt)
+                  else
+                    (* chord in a list: reuse the chord branch logic *)
+                    let len = (List.hd notes).length in
+                    let pitches =
+                      notes
+                      |> List.map (fun n ->
+                            let n' = transpose_note n transpose_amt in
+                            let base = pitch_to_lilypond (String.lowercase_ascii n'.pitch) in
+                            let oct_suf =
+                              if String.lowercase_ascii n'.pitch = "r" then ""
+                              else if n'.octave = 3 then ""
+                              else if n'.octave > 3 then String.make (n'.octave - 3) '\''
+                              else String.make (3 - n'.octave) ','
+                            in
+                            base ^ oct_suf
+                        )
+                    in
+                    "<" ^ String.concat " " pitches ^ ">" ^ string_of_int len
+                )
+            in
+            aux (acc @ tokens) transpose_amt rest
+
         | SExpr (_, SNoteLit note) :: rest ->
-            let note' = transpose_note note transpose_amt in
-            let token = note_token note' in
-            aux (acc @ [token]) transpose_amt rest
-        | SRepeat ((_, SLiteral count), body_stmt) :: rest ->
-            let body_stmts = match body_stmt with SBlock l -> l | stmt -> [stmt] in
-            let nested = aux [] transpose_amt body_stmts in
-            let rec repeat n acc' = if n <= 0 then acc' else repeat (n-1) (acc' @ nested) in
-            aux (acc @ repeat count []) transpose_amt rest
-        | STranspose ((_, SLiteral n), body_stmt) :: rest ->
-            let body_stmts = match body_stmt with SBlock l -> l | stmt -> [stmt] in
-            let nested = aux [] (transpose_amt + n) body_stmts in
+            aux (acc @ [note_token (transpose_note note transpose_amt)]) transpose_amt rest
+
+        | SRepeat ((_, SLiteral count), body) :: rest ->
+            let stmts = match body with SBlock l -> l | s -> [s] in
+            let nested = aux [] transpose_amt stmts in
+            let rec rep n acc' = if n <= 0 then acc' else rep (n-1) (acc' @ nested) in
+            aux (acc @ rep count []) transpose_amt rest
+
+        | STranspose ((_, SLiteral n), body) :: rest ->
+            let stmts = match body with SBlock l -> l | s -> [s] in
+            let nested = aux [] (transpose_amt + n) stmts in
             aux (acc @ nested) transpose_amt rest
-        | _ :: rest ->
-            aux acc transpose_amt rest
-        | [] ->
-            acc
+
+        | _ :: rest -> aux acc transpose_amt rest
+        | [] -> acc
       in
       aux [] 0 stmts |> String.concat " "
     in
@@ -245,10 +276,12 @@ let translate (globals, functions) = (* global variables and a list of functions
         L.build_global_stringptr lilypond_str "note_str" builder  (* optional: for now *)
        (* we can change this later but for now default octave is octave 4*)
       | SRest duration -> Printf.sprintf "%dr" duration *)
-      | SNoteList notes ->
-       (* emit a global string pointer for the whole list *)
-       let s = list_token notes in
-       L.build_global_stringptr s "notelist" builder
+      | SNoteList groups ->
+         (* groups : note list list; flatten into one note list *)
+         let flat_notes = List.flatten groups in
+         let s = list_token flat_notes in
+         L.build_global_stringptr s "notelist" builder
+
       | SNoteLit note ->
         (* unpack your Ast.note record *)
         let p = pitch_to_lilypond note.pitch in
