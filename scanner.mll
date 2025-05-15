@@ -1,4 +1,8 @@
-{ open Parser }
+{ 
+  open Parser
+  open Ast
+  open Str 
+}
 
 let alpha = ['a'-'z' 'A'-'Z']
 let digit = ['0'-'9']
@@ -7,7 +11,6 @@ let whitespace = [' ' '\t' '\r' '\n']
 
 let alpha_lower = ['a'-'z']
 let id = alpha_lower alphanumeric+ (* must be at least 2 characters long*)
-
 let INT = '-'? ('0' | (['1'-'9'] digit*))
 (* let string_body = ['a'-'z' 'A'-'Z' '0'-'9']* *)
 let string_body = [^ '"' ]* (* allow strings to have spaces in them *)
@@ -100,7 +103,29 @@ rule token = parse
         NOTELIT n
     }
 *)
-
+    | number? base_note ("_" base_note)+ octave_digit? as lxm {
+      (* split off leading length digits *)
+      let len_str, rest_idx =
+        let buf = Buffer.create 4 and i = ref 0 in
+        while !i < String.length lxm && lxm.[!i] >= '0' && lxm.[!i] <= '9' do
+          Buffer.add_char buf lxm.[!i]; incr i
+        done;
+        Buffer.contents buf, !i
+      in
+      (* the pitches+octave suffix *)
+      let body = String.sub lxm rest_idx (String.length lxm - rest_idx) in
+      (* if last char is octave digit *)
+      let pitch_part, oct_str =
+        if body <> "" && (body.[String.length body - 1] >= '1' && body.[String.length body - 1] <= '8') then
+          (String.sub body 0 (String.length body - 1), String.make 1 body.[String.length body - 1])
+        else body, ""
+      in
+      let length = if len_str = "" then 4 else int_of_string len_str in
+      let octave = if oct_str = "" then 4 else int_of_string oct_str in
+      let pitches = Str.split (Str.regexp "_") pitch_part in
+      let notes = List.map (fun p -> { Ast.pitch = p; octave; length }) pitches in
+      CHORDLIT notes
+    }
     | NOTE as lxm {
         (* break out prefix digits, pitch+accidental, and suffix digit *)
         let len, rest =

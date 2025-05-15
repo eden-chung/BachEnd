@@ -151,6 +151,14 @@ let translate (globals, functions) = (* global variables and a list of functions
 
     let lilypond_of_body stmts =
       let rec aux acc transpose_amt = function
+        | SExpr (_, SChordLit notes) :: rest ->
+          let tokens = 
+            notes 
+            |> List.map (fun note -> note_token (transpose_note note transpose_amt))
+            |> String.concat " "
+          in
+          (* angle-brackets tell LilyPond “play together” *)
+          aux (acc @ ["<" ^ tokens ^ ">"]) transpose_amt rest
         | SExpr (_, SNoteList notes) :: rest ->
           let tokens =
             notes

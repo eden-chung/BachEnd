@@ -18,6 +18,7 @@ type expr =
    | StringLit of string
    | NoteLit   of note
    | NoteList  of note list
+   | ChordLit  of note list
    | Id        of string
    | Binop     of expr * op * expr
    | Unop      of unop * expr

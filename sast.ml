@@ -9,6 +9,7 @@ and sx =
   | SBoolLit of bool (* boolean literal *)
   | SNoteLit of note  (* note literal *)
   | SNoteList of note list
+  | SChordLit  of note list
   | SId of string (* variable identifier *)
   | SAssign of string * sexpr (* variable assignment: string is var name, sexpr is expression *)
   | SBinop of sexpr * op * sexpr (* binary operator: left operand, operator, right operand *)
@@ -70,6 +71,8 @@ let rec string_of_sexpr ((t, e) : typ * sx) : string =
        "[" ^ String.concat " "
          (List.map (fun n -> string_of_note n) notes)
        ^ "]"
+  | SChordLit notes  ->
+       "<" ^ String.concat " " (List.map string_of_note notes) ^ ">"
   | SId s            -> s
   | SAssign (v, e2)  -> v ^ " = " ^ string_of_sexpr e2
   | SBinop (e1,o,e2) ->
