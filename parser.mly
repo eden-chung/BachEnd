@@ -16,6 +16,7 @@ open Ast
 %token <bool> BLIT
 %token <string> ID
 %token <Ast.note> NOTELIT
+%token <Ast.note list> CHORDLIT
 %token EOF
 
 %start program
@@ -141,6 +142,7 @@ expr:
     LITERAL          { Literal($1)            }
   | BLIT             { BoolLit($1)            }
   | NOTELIT          { NoteLit($1)            }
+  | CHORDLIT         { ChordLit($1)           }
   | ID               { Id($1)                 }
   | expr PLUS   expr { Binop($1, ADD,   $3)   }
   | expr MINUS  expr { Binop($1, SUB,   $3)   }
@@ -162,8 +164,14 @@ expr:
   | LBRACKET note_list RBRACKET { NoteList($2)  }
 
 note_list:
-    NOTELIT                { [$1] }
-  | NOTELIT note_list       { $1 :: $2 }
+  //   NOTELIT                { [$1] }
+  // | CHORDLIT               { $1}
+  // | NOTELIT note_list       { $1 :: $2 }
+  // | CHORDLIT note_list     { $1 @ $2 }
+   NOTELIT                { [[ $1 ]]                }  
+  | CHORDLIT               { [ $1 ]                  } 
+  | NOTELIT note_list      { [ $1 ] :: $2            } 
+  | CHORDLIT note_list     { $1      :: $2            }
 
 /* args_opt*/
 args_opt:

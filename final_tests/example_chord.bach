@@ -1,0 +1,11 @@
+NUMBER main () {
+  WRITE(
+    NAME="ChordListDemo",
+    TEMPO=100,
+    CLEF=TREBLE,
+    TIMESIGNATURE=(4,4),
+    KEYSIGNATURE="C"
+  ) {
+    [C E 2C_E_G]!
+  }
+}
