@@ -149,75 +149,89 @@ let translate (globals, functions) = (* global variables and a list of functions
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
 
+    let render_group transpose_amt notes =
+      if List.length notes = 1 then
+        (* single note: use note_token to embed its own length *)
+        note_token (transpose_note (List.hd notes) transpose_amt)
+      else
+        (* chord: pull common length, render only pitches inside <…>, append length once *)
+        let len = (List.hd notes).length in
+        let pitches =
+          notes
+          |> List.map (fun n ->
+              let n' = transpose_note n transpose_amt in
+              let base = pitch_to_lilypond (String.lowercase_ascii n'.pitch) in
+              let oct_suf =
+                if String.lowercase_ascii n'.pitch = "r" then ""
+                else if n'.octave = 3 then ""
+                else if n'.octave > 3 then String.make (n'.octave - 3) '\''
+                else String.make (3 - n'.octave) ','
+              in
+              base ^ oct_suf
+            )
+        in
+        "<" ^ String.concat " " pitches ^ ">" ^ string_of_int len
+      in
+
     let lilypond_of_body stmts =
-      let rec aux acc transpose_amt = function
-        (* 1) Chord groups: strip per-note lengths, grab one length for the whole chord *)
-        | SExpr (_, SChordLit notes) :: rest ->
-            let len = (List.hd notes).length in
-            let pitches =
-              notes
-              |> List.map (fun n ->
-                  let n' = transpose_note n transpose_amt in
-                  let base = pitch_to_lilypond (String.lowercase_ascii n'.pitch) in
-                  let oct_suf =
-                    if String.lowercase_ascii n'.pitch = "r" then ""
-                    else if n'.octave = 3 then ""
-                    else if n'.octave > 3 then String.make (n'.octave - 3) '\''
-                    else String.make (3 - n'.octave) ','
-                  in
-                  base ^ oct_suf
-                )
-            in
-            let chord_token = "<" ^ String.concat " " pitches ^ ">" ^ string_of_int len in
-            aux (acc @ [chord_token]) transpose_amt rest
+      let module SM = StringMap in
+      (* env : string → note list list *)
+      let rec aux env acc transpose_amt = function
 
+        (* 1) variable declaration / assignment 
+            we assume you desugar NOTE xx = [ … ]! into SAssign("xx", NoteList …) in SAST *)
+        | SExpr (_, SAssign (name, (_, SNoteList groups))) :: rest ->
+            aux (SM.add name groups env) acc transpose_amt rest
+
+        | SExpr (_, SAssign (name, (_, SChordLit notes))) :: rest ->
+            (* single‐chord decl; wrap in one‐element list of groups *)
+            aux (SM.add name [notes] env) acc transpose_amt rest
+
+        (* 2) variable use: xx! becomes Id "xx" in SAST *)
+        | SExpr (_, SId name) :: rest ->
+            let groups = try SM.find name env
+                        with Not_found -> failwith ("undefined variable " ^ name)
+            in
+            let tokens = List.map (render_group transpose_amt) groups in
+            aux env (acc @ tokens) transpose_amt rest
+
+        (* 3) inline note-list or chord literals still work as before *)
         | SExpr (_, SNoteList groups) :: rest ->
-            let tokens =
-              groups
-              |> List.map (fun notes ->
-                  if List.length notes = 1 then
-                    (* single note *)
-                    note_token (transpose_note (List.hd notes) transpose_amt)
-                  else
-                    (* chord in a list: reuse the chord branch logic *)
-                    let len = (List.hd notes).length in
-                    let pitches =
-                      notes
-                      |> List.map (fun n ->
-                            let n' = transpose_note n transpose_amt in
-                            let base = pitch_to_lilypond (String.lowercase_ascii n'.pitch) in
-                            let oct_suf =
-                              if String.lowercase_ascii n'.pitch = "r" then ""
-                              else if n'.octave = 3 then ""
-                              else if n'.octave > 3 then String.make (n'.octave - 3) '\''
-                              else String.make (3 - n'.octave) ','
-                            in
-                            base ^ oct_suf
-                        )
-                    in
-                    "<" ^ String.concat " " pitches ^ ">" ^ string_of_int len
-                )
-            in
-            aux (acc @ tokens) transpose_amt rest
+            let tokens = List.map (render_group transpose_amt) groups in
+            aux env (acc @ tokens) transpose_amt rest
 
+        | SExpr (_, SChordLit notes) :: rest ->
+            let token = render_group transpose_amt notes in
+            aux env (acc @ [token]) transpose_amt rest
+
+        (* 4) single-note literals *)
         | SExpr (_, SNoteLit note) :: rest ->
-            aux (acc @ [note_token (transpose_note note transpose_amt)]) transpose_amt rest
+            let tok = note_token (transpose_note note transpose_amt) in
+            aux env (acc @ [tok]) transpose_amt rest
 
+        (* 5) repeats and transposes carry on unchanged *)
         | SRepeat ((_, SLiteral count), body) :: rest ->
-            let stmts = match body with SBlock l -> l | s -> [s] in
-            let nested = aux [] transpose_amt stmts in
+            let stmts = (match body with SBlock l -> l | s -> [s]) in
+            let nested = aux env [] transpose_amt stmts in
             let rec rep n acc' = if n <= 0 then acc' else rep (n-1) (acc' @ nested) in
-            aux (acc @ rep count []) transpose_amt rest
+            aux env (acc @ rep count []) transpose_amt rest
 
         | STranspose ((_, SLiteral n), body) :: rest ->
-            let stmts = match body with SBlock l -> l | s -> [s] in
-            let nested = aux [] (transpose_amt + n) stmts in
-            aux (acc @ nested) transpose_amt rest
+            let stmts = (match body with SBlock l -> l | s -> [s]) in
+            let nested = aux env [] (transpose_amt + n) stmts in
+            aux env (acc @ nested) transpose_amt rest
 
-        | _ :: rest -> aux acc transpose_amt rest
-        | [] -> acc
+        (* 6) skip anything else *)
+        | _ :: rest ->
+            aux env acc transpose_amt rest
+
+        | [] ->
+            acc
       in
-      aux [] 0 stmts |> String.concat " "
+
+      (* start with empty env, no tokens, zero transpose *)
+      aux SM.empty [] 0 stmts
+      |> String.concat " "
     in
   
 

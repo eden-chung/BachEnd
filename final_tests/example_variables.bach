@@ -1,0 +1,10 @@
+NUMBER main () {
+    NOTE xx!
+    WRITE(NAME="Example of declaring variables", TEMPO=100) {
+        xx = [4C4 2D4 4E4]!
+        xx!
+
+        xx = [F]!
+        xx!
+    }
+}

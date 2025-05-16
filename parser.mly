@@ -45,7 +45,8 @@ decls:
  | fdecl decls { (fst $2, ($1 :: snd $2)) }
 vdecl_list:
   /*nothing*/ { [] }
-  | vdecl EXCLAMATION vdecl_list  {  $1 :: $3 }
+  // | vdecl EXCLAMATION vdecl_list  {  $1 :: $3 }
+  | vdecl vdecl_list               {  $1 :: $2 }
 
 /* int x */
 vdecl:
@@ -88,7 +89,7 @@ stmt_list:
   | stmt stmt_list  { $1::$2 }
 
 stmt:
-    expr EXCLAMATION                               { Expr $1      }
+  | typ ID ASSIGN expr EXCLAMATION { VDecl($1, $2, $4) }
   | LBRACE stmt_list RBRACE                 { Block $2 }
   /* if (condition) { block1} else {block2} */
   /* if (condition) stmt else stmt */
@@ -112,6 +113,8 @@ stmt:
         body = $12;
       }
     }
+  | expr EXCLAMATION                               { Expr $1      }
+
 
 write_optional_args:
     /* no extra args */ { (None, None, None) }

@@ -29,6 +29,7 @@ type expr =
 
  type stmt =
      Block    of stmt list
+   | VDecl    of typ * string * expr
    | Expr     of expr
    | If       of expr * stmt * stmt
    | While    of expr * stmt

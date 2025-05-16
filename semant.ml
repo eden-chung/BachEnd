@@ -152,6 +152,12 @@ let check (globals, functions) =
       (* A block is correct if each statement is correct and nothing
          follows any Return statement.  Nested blocks are flattened. *)
         Block sl -> SBlock (check_stmt_list sl)
+      | VDecl(ty, name, init_expr) ->
+        let (it, ie') = check_expr init_expr in
+        if it <> ty then
+          raise (Failure ("initializer type mismatch for " ^ name))
+        else
+          SBlock []
       | Expr e -> SExpr (check_expr e)
       | If(e, st1, st2) ->
         SIf(check_bool_expr e, check_stmt st1, check_stmt st2)
