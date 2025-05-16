@@ -12,7 +12,6 @@ let whitespace = [' ' '\t' '\r' '\n']
 let alpha_lower = ['a'-'z']
 let id = alpha_lower alphanumeric+ (* must be at least 2 characters long*)
 let INT = '-'? ('0' | (['1'-'9'] digit*))
-(* let string_body = ['a'-'z' 'A'-'Z' '0'-'9']* *)
 let string_body = [^ '"' ]* (* allow strings to have spaces in them *)
 let STRING = '"' string_body '"'
 
