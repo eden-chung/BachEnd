@@ -1,6 +1,6 @@
 NUMBER main () {
     NOTE xx!
-    WRITE(NAME="ChordListDemo", TEMPO=100, CLEF=TREBLE, TIMESIGNATURE=(4,4), KEYSIGNATURE="C") {
+    WRITE(NAME="My Song", TEMPO=100, CLEF=TREBLE, TIMESIGNATURE=(4,4), KEYSIGNATURE="C") {
       [C# E 2C_E_G]!
 
       xx = [4C 4C 4C 4C]!

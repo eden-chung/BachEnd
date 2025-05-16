@@ -1,4 +1,4 @@
-\header { title = "ChordListDemo" }
+\header { title = "My Song" }
 \version "2.24.2"
 \score { \new Staff {
 \clef treble
