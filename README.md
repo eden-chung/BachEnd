@@ -21,16 +21,18 @@ To compile bachend code into a PDF, run
 
 For example,
 ```
-./bachend.native final_tests/example1.bach
+./bachend.native final_tests/example_all_combined.bach
 ```
 
 This will generate a PDF called output.pdf. If the user wants to specify the name of the PDF, instead of the command above, run
 
 ```
-./bachend.native -o <output_filename> final_tests/example1.bach
+./bachend.native -o <output_filename> final_tests/example_all_combined.bach
 ```
 
-For example, to generate a PDF file called twinkle.pdf, run
+For example, to generate a PDF file called sample_output.pdf, run
 ```
-./bachend.native -o twinkle final_tests/example1.bach
+./bachend.native -o sample_output final_tests/example_all_combined.bach
 ```
+
+Then, it should produce a file similar to [this PDF](sample_output.pdf)
