@@ -35,4 +35,4 @@ For example, to generate a PDF file called sample_output.pdf, run
 ./bachend.native -o sample_output final_tests/example_all_combined.bach
 ```
 
-Then, it should produce a file similar to [this PDF](sample_output.pdf)
+Then, it should produce a file similar to [this PDF](sample_output.pdf). It will also produce a file called [sample_output.ly](sample_output.ly), which shows the Lilypond source code used to generate the PDF.
