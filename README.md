@@ -10,7 +10,7 @@ opam install llvm
 
 Compile project
 ```
-ocamlbuild -use-ocamlfind -pkgs llvm bachend.native
+ocamlbuild -use-ocamlfind -pkg "llvm,str" bachend.native
 ```
 
 To compile bachend code into a PDF, run
