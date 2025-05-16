@@ -16,11 +16,6 @@ let INT = '-'? ('0' | (['1'-'9'] digit*))
 let string_body = [^ '"' ]* (* allow strings to have spaces in them *)
 let STRING = '"' string_body '"'
 
-(*
-let NOTE_BASE = ['A'-'G']
-let NOTE = NOTE_BASE ('#' | 'b')? | 'R' (* R for rest note *) *)
-
-
 let number      = ['0'-'9']+
 let octave_digit = ['1'-'8']
 let accidental  = ['#' 'b']
