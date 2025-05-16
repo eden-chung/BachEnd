@@ -1,5 +1,3 @@
-/* Ocamlyacc parser for MicroC */
-
 %{
 open Ast
 %}
@@ -91,8 +89,6 @@ stmt_list:
 stmt:
   | typ ID ASSIGN expr EXCLAMATION { VDecl($1, $2, $4) }
   | LBRACE stmt_list RBRACE                 { Block $2 }
-  /* if (condition) { block1} else {block2} */
-  /* if (condition) stmt else stmt */
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
   | WHILE LPAREN expr RPAREN stmt           { While ($3, $5)  }
   /* return */
