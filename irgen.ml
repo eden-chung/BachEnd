@@ -175,61 +175,41 @@ let translate (globals, functions) = (* global variables and a list of functions
 
     let lilypond_of_body stmts =
       let module SM = StringMap in
-      (* env : string → note list list *)
       let rec aux env acc transpose_amt = function
-
-        (* 1) variable declaration / assignment 
-            we assume you desugar NOTE xx = [ … ]! into SAssign("xx", NoteList …) in SAST *)
         | SExpr (_, SAssign (name, (_, SNoteList groups))) :: rest ->
             aux (SM.add name groups env) acc transpose_amt rest
-
         | SExpr (_, SAssign (name, (_, SChordLit notes))) :: rest ->
-            (* single‐chord decl; wrap in one‐element list of groups *)
             aux (SM.add name [notes] env) acc transpose_amt rest
-
-        (* 2) variable use: xx! becomes Id "xx" in SAST *)
         | SExpr (_, SId name) :: rest ->
             let groups = try SM.find name env
                         with Not_found -> failwith ("undefined variable " ^ name)
             in
             let tokens = List.map (render_group transpose_amt) groups in
             aux env (acc @ tokens) transpose_amt rest
-
-        (* 3) inline note-list or chord literals still work as before *)
         | SExpr (_, SNoteList groups) :: rest ->
             let tokens = List.map (render_group transpose_amt) groups in
             aux env (acc @ tokens) transpose_amt rest
-
         | SExpr (_, SChordLit notes) :: rest ->
             let token = render_group transpose_amt notes in
             aux env (acc @ [token]) transpose_amt rest
-
-        (* 4) single-note literals *)
         | SExpr (_, SNoteLit note) :: rest ->
             let tok = note_token (transpose_note note transpose_amt) in
             aux env (acc @ [tok]) transpose_amt rest
-
-        (* 5) repeats and transposes carry on unchanged *)
         | SRepeat ((_, SLiteral count), body) :: rest ->
             let stmts = (match body with SBlock l -> l | s -> [s]) in
             let nested = aux env [] transpose_amt stmts in
             let rec rep n acc' = if n <= 0 then acc' else rep (n-1) (acc' @ nested) in
             aux env (acc @ rep count []) transpose_amt rest
-
         | STranspose ((_, SLiteral n), body) :: rest ->
             let stmts = (match body with SBlock l -> l | s -> [s]) in
             let nested = aux env [] (transpose_amt + n) stmts in
             aux env (acc @ nested) transpose_amt rest
-
-        (* 6) skip anything else *)
         | _ :: rest ->
             aux env acc transpose_amt rest
-
         | [] ->
             acc
       in
 
-      (* start with empty env, no tokens, zero transpose *)
       aux SM.empty [] 0 stmts
       |> String.concat " "
     in
@@ -279,17 +259,6 @@ let translate (globals, functions) = (* global variables and a list of functions
       | SId s       -> L.build_load (lookup s) s builder
       | SAssign (s, e) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup s) builder); e'
-      (* | SNote (pitch, octave, duration) ->
-        let pitch_str = pitch_to_lilypond pitch in
-        let octave_str =
-          if pitch = "r" then ""  (* rests don't get ticks *)
-          else if octave = 4 then "'"
-          else if octave > 4 then String.make (octave - 4) '\''
-          else String.make (4 - octave) ',' in
-        let lilypond_str = Printf.sprintf "%d%s%s" duration pitch_str octave_str in
-        L.build_global_stringptr lilypond_str "note_str" builder  (* optional: for now *)
-       (* we can change this later but for now default octave is octave 4*)
-      | SRest duration -> Printf.sprintf "%dr" duration *)
       | SNoteList groups ->
          (* groups : note list list; flatten into one note list *)
          let flat_notes = List.flatten groups in
@@ -331,10 +300,6 @@ let translate (globals, functions) = (* global variables and a list of functions
         L.build_call fdef (Array.of_list llargs) result builder
     in
 
-    (* LLVM insists each basic block end with exactly one "terminator"
-       instruction that transfers control.  This function runs "instr builder"
-       if the current block does not already have a terminator.  Used,
-       e.g., to handle the "fall off the end of the function" case. *)
     let add_terminal builder instr =
       match L.block_terminator (L.insertion_block builder) with
         Some _ -> ()
@@ -434,7 +399,6 @@ let translate (globals, functions) = (* global variables and a list of functions
 
   in
 
-    (* only keep those functions whose body contains a WRITE(...) block *)
   let funcs_with_write =
     List.filter
       (fun f ->
