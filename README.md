@@ -1,3 +1,5 @@
+The final presentation slides can be found [here](Final%20Presentation.pdf) and the final report can be found here.
+
 # Requirements
 
 Need LLVM installed for OCaml
